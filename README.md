@@ -1,11 +1,30 @@
 # Prompt Studio｜指令工坊
 
-> 將零散的需求整理成具備目標、脈絡、執行步驟、限制與驗收標準的結構化 AI 指令。
+> 用 Loop Engineering 寫 AI 指令：目標、可自動檢查的完成條件、範圍、迴圈設定與獨立檢查。
 
 Prompt Studio 是一個純前端、免建置的提示詞編輯器。使用者透過表單描述任務，應用程式會即時組合成 Markdown 格式的專業指令，並提供複製與下載功能。
 
 - **線上版本**：<https://chou-lei.github.io/Prompt_Web/>
 - **原始碼**：<https://github.com/chou-lei/Prompt_Web>
+
+---
+
+## 0. Loop Engineering 版（2026-11 改版）
+
+表單已從「01–08 欄位＋四個勾選」改成 Loop Engineering 結構（參考 Addy Osmani〈Loop Engineering〉、Claude Code `/goal` 文件）：
+
+| 欄位 | 產出段落 |
+|---|---|
+| 01 目標 | `## 目標` |
+| 02 完成條件（每行一條）＋驗證指令（結束碼 0） | `## 完成條件` |
+| 03 可以修改／不可改動 | `## 範圍` |
+| 04 背景與資料 | `## 背景與資料` |
+| 05 最多回合數、獨立檢查者、進度筆記檔 | `## 工作迴圈`、`## 獨立檢查`、`## 進度筆記` |
+| 06 家規（四條，預設勾選） | `## 家規` |
+
+另外固定附上 `## 回報格式`。預覽可切換「完整指令」與單行「/goal 指令」。舊版草稿（`prompt-studio-v1`）第一次開啟時會自動對應到新欄位：goal→目標、criteria→完成條件、constraints→不可改動、role/context/steps/examples→背景。成果語言改為跟隨介面語言。
+
+以下第 2–5 節描述的是舊版欄位，僅供參考；測試以 `tests/run.js` 為準（可用 `CHROME_PATH=/usr/bin/google-chrome node tests/run.js` 指定本機 Chrome）。
 
 ---
 
