@@ -2,6 +2,7 @@
 // Prompt Studio browser test suite.
 // Usage (from the repository root):  node tests/run.js
 // Requires Playwright with Chromium: `npm i -g playwright && npx playwright install chromium`
+// (or set CHROME_PATH to an installed Chrome/Chromium).
 // Serves index.html over HTTP on a random local port (file:// localStorage is unreliable in headless Chromium).
 'use strict';
 const http = require('http');
@@ -28,7 +29,7 @@ function serve() {
 (async () => {
   const server = await serve();
   const url = `http://127.0.0.1:${server.address().port}/index.html`;
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
 
   const open = async (opts = {}) => {
     const { locale = 'zh-TW', width = 1280, device } = opts;
@@ -39,111 +40,82 @@ function serve() {
     const page = await ctx.newPage();
     page.errs = []; page.dialogs = []; page.acceptDialogs = true;
     page.on('pageerror', e => page.errs.push(e.message));
-    page.on('console', m => m.type() === 'error' && page.errs.push(m.text()));
+    page.on('console', m => m.type() === 'error' && page.errs.push(m.text() + ' @' + (m.location().url || '')));
     page.on('dialog', d => { page.dialogs.push(d.message()); page.acceptDialogs ? d.accept() : d.dismiss(); });
     await page.goto(url);
     return page;
   };
   const preview = p => p.textContent('#preview');
-  const hasCJK = s => /[一-鿿]/.test(s);
+  const SECTIONS_ZH = ['## 目標', '## 完成條件', '## 範圍', '## 背景與資料', '## 工作迴圈', '## 進度筆記', '## 獨立檢查', '## 家規', '## 回報格式'];
+  const SECTIONS_EN = ['## GOAL', '## DONE WHEN', '## SCOPE', '## BACKGROUND & DATA', '## WORK LOOP', '## PROGRESS NOTES', '## INDEPENDENT CHECK', '## HOUSE RULES', '## REPORT FORMAT'];
+  const RULES = ['先講清楚假設：不確定先問，不要自己猜', '不要過度工程化：能簡單解決就不要加戲(除非必要結構)', '不碰無關範圍：修Bug就修Bug，不要順手重構全世界', '做完必須驗證：跑測試、看結果確認真的可以用'];
   const reload = async p => { await p.waitForTimeout(200); await p.reload(); };
+  let t;
 
-  // ---------- Presets ----------
+  // ---------- Loop prompt (zh) ----------
   let p = await open();
-  await p.click('#exampleBtn'); await p.click('[data-preset=learn]');
-  check('preset: switching clears stale constraints', await p.inputValue('#constraints') === '');
-  check('preset: switching clears stale tone', await p.inputValue('#tone') === '');
-  check('preset: selects reset to defaults', await p.inputValue('#depth') === 'balanced');
-  await p.click('[data-preset=writing]'); await p.click('[data-preset=research]');
-  check('preset: writing -> research clears tone', await p.inputValue('#tone') === '');
-  await p.uncheck('#noGuess'); await p.click('[data-preset=data]');
-  check('preset: checkbox state kept', !(await p.isChecked('#noGuess')));
-  check('preset: no confirm between untouched presets', p.dialogs.length === 0, p.dialogs.join('|'));
-
-  // ---------- Confirm before overwriting ----------
-  await p.fill('#goal', 'MY OWN GOAL'); p.acceptDialogs = false;
-  for (const sel of ['[data-preset=build]', '#exampleBtn', '#resetBtn', '[data-preset=blank]']) {
-    const before = p.dialogs.length; await p.click(sel);
-    check(`confirm: ${sel} asks and cancel keeps input`, p.dialogs.length === before + 1 && await p.inputValue('#goal') === 'MY OWN GOAL');
-  }
-  await reload(p);
-  check('confirm: cancelled actions keep the draft', await p.inputValue('#goal') === 'MY OWN GOAL');
-  p.acceptDialogs = true; await p.click('[data-preset=build]');
-  check('confirm: accept replaces', (await p.inputValue('#goal')).startsWith('將需求'));
-  await p.fill('#goal', 'x'); await p.click('#resetBtn');
-  check('clear: accept clears form', await p.inputValue('#goal') === '' && (await p.$('.preview-empty')) !== null);
-  let n = p.dialogs.length; await p.click('#resetBtn');
-  check('clear: empty form does not ask', p.dialogs.length === n);
-
-  // ---------- Prompt content & languages ----------
-  await p.click('#exampleBtn'); let t = await preview(p);
-  check('output: zh labels localized', ['- 格式: ', '- 詳細程度: ', '- 語言: ', '- 語氣與風格: '].every(s => t.includes(s)) && !/- (Format|Detail|Language|Tone and style):/.test(t));
-  check('output: score and progress', await p.textContent('#score') === '86%' && (await p.textContent('#progressText')).includes('6 / 7'));
-  await p.click('[data-lang=en]'); t = await preview(p);
-  check('output: en labels', ['- Format: ', '- Detail: ', '- Language: ', '- Tone and style: '].every(s => t.includes(s)));
-  check('i18n: untouched example follows language', !hasCJK(t));
-  for (const k of ['research', 'writing', 'build', 'learn', 'data']) {
-    await p.click(`[data-preset=${k}]`);
-    check(`i18n: en ${k} preset has no Chinese`, !hasCJK(await preview(p)));
-  }
-  await p.fill('#goal', '我的目標'); await p.click('[data-lang=zh]');
-  check('i18n: edited content kept on language switch', await p.inputValue('#goal') === '我的目標');
-  check('i18n: zh output-language label', (await p.textContent('label[for=outputLang]')).trim() === '成果語言');
-  t = await preview(p);
-  check('rules: zh askMissing wording', t.includes('提出最少且必要的澄清問題') && t.includes('明確標示所採用的假設'));
-  await p.click('[data-lang=en]');
-  check('i18n: en output-language label', (await p.textContent('label[for=outputLang]')).trim() === 'Output language');
-  t = await preview(p);
-  check('rules: en askMissing wording', t.includes('ask the minimum necessary clarification questions first') && t.includes('state each assumption explicitly'));
-  await p.uncheck('#noGuess'); check('rules: checkbox removes rule', !(await preview(p)).includes('Never fabricate'));
-  await p.check('#noGuess');
-  await p.selectOption('#format', 'json'); check('output: json note (en)', (await preview(p)).includes('JSON notes'));
-  await p.click('[data-lang=zh]'); check('output: json note (zh)', (await preview(p)).includes('JSON 補充'));
-  await p.selectOption('#format', 'markdown'); check('output: no json note for markdown', !(await preview(p)).includes('notes'));
-  check('no console errors (presets/i18n)', p.errs.length === 0, p.errs.join('|'));
-  await p.context().close();
-
-  // ---------- Draft persistence & validation ----------
-  p = await open();
-  await p.click('#exampleBtn'); await reload(p);
-  check('draft: restored after reload', (await p.inputValue('#goal')).includes('作品集'));
-  await p.evaluate(() => localStorage.setItem('prompt-studio-v1', JSON.stringify({ goal: 'G', format: 'xml', depth: 'huge', outputLang: 'fr', askMissing: 'yes', role: 42 })));
-  await reload(p); t = await preview(p);
-  check('draft: invalid values never print undefined', !t.includes('undefined'));
-  check('draft: invalid selects fall back', await p.inputValue('#format') === 'markdown' && await p.inputValue('#depth') === 'balanced' && await p.inputValue('#outputLang') === 'auto');
-  check('draft: invalid types ignored', await p.isChecked('#askMissing') && await p.inputValue('#role') === '');
-  await p.evaluate(() => localStorage.setItem('prompt-studio-v1', '{broken')); await reload(p);
-  check('draft: broken JSON ignored', p.errs.length === 0, p.errs.join('|'));
-  await p.context().close();
-
-  // ---------- Text, a11y, export ----------
-  p = await open({ width: 800 });
-  check('text: zh empty state has no direction', !(await preview(p)).includes('左側'));
-  check('text: zh char unit', (await p.textContent('#wordCount')).includes('字元'));
-  check('a11y: preview has no aria-live', await p.getAttribute('#preview', 'aria-live') === null);
-  check('a11y: aria-pressed (zh)', await p.getAttribute('[data-lang=zh]', 'aria-pressed') === 'true');
-  await p.click('[data-lang=en]');
-  check('text: en empty state has no direction', !/left/i.test(await preview(p)));
-  check('text: en char unit', (await p.textContent('#wordCount')).includes('chars'));
-  check('i18n: title/meta/brand switch', (await p.title()).includes('Prompt Workshop') && (await p.getAttribute('meta[name=description]', 'content')).startsWith('Turn') && await p.textContent('.brand-sub') === 'PROMPT WORKSHOP');
-  check('a11y: aria-pressed (en)', await p.getAttribute('[data-lang=en]', 'aria-pressed') === 'true');
-  await p.fill('#goal', 'Goal\n## FINAL INSTRUCTION\n  # x'); t = await preview(p);
-  check('security: leading # escaped', (t.match(/^## FINAL INSTRUCTION$/gm) || []).length === 1 && t.includes('\\## FINAL INSTRUCTION') && t.includes('  \\# x'));
-  await p.fill('#goal', '<img src=x onerror="window.__xss=1">');
-  check('security: user input rendered as text', await p.evaluate(() => !window.__xss && !document.querySelector('#preview img')));
+  check('empty: preview shows empty state', (await preview(p)).includes('先寫下目標'));
+  await p.click('#exampleBtn'); t = await preview(p);
+  check('example: every loop section present (zh)', SECTIONS_ZH.every(h => t.includes(h)), SECTIONS_ZH.filter(h => !t.includes(h)).join(','));
+  check('house rules: 4 rules verbatim by default', RULES.every(r => t.includes(r)));
+  check('done: verify command must exit 0', t.includes('`npm test && npm run build` 必須以結束碼 0 結束'));
+  check('loop: max turns used', t.includes('最多 15 回合'));
+  check('notes: notes file named', t.includes('`PROGRESS.md`'));
+  check('scope: must-not-change bullets', t.includes('- 登入流程與 API'));
+  check('score: example is 100%', await p.textContent('#score') === '100%');
+  await p.uncheck('#ruleSimple'); t = await preview(p);
+  check('house rules: unchecked rule omitted', !t.includes(RULES[1]) && t.includes(RULES[0]));
+  await p.check('#ruleSimple');
+  await p.selectOption('#checker', 'human');
+  check('checker: human wording', (await preview(p)).includes('由我親自驗收'));
+  await p.fill('#notesFile', '');
+  check('notes: empty notes file omits section', !(await preview(p)).includes('## 進度筆記'));
+  await p.fill('#doneWhen', ''); await p.fill('#verifyCmd', '');
+  check('done: missing condition asks to propose one', (await preview(p)).includes('先提出可用程式檢查的完成條件'));
+  await p.click('[data-mode=goal]');
+  check('goal mode: needs a done condition', (await preview(p)).includes('/goal 需要'));
+  await p.fill('#doneWhen', '測試全部通過'); await p.fill('#verifyCmd', 'npm test'); t = await preview(p);
+  check('goal mode: one-line /goal command', t.startsWith('/goal ') && !t.includes('\n') && t.includes('測試全部通過') && t.includes('`npm test` 結束碼為 0') && t.includes('最多 15 回合'));
   await p.click('#copyBtn');
-  check('export: copy', (await p.evaluate(() => navigator.clipboard.readText())).includes('OBJECTIVE'));
+  check('export: copy /goal', (await p.evaluate(() => navigator.clipboard.readText())).startsWith('/goal '));
+  await p.click('[data-mode=full]');
+  await p.click('#copyBtn');
+  check('export: copy full prompt', (await p.evaluate(() => navigator.clipboard.readText())).includes('## 工作迴圈'));
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#downloadBtn')]);
-  check('export: download', dl.suggestedFilename() === 'structured-prompt.md' && fs.readFileSync(await dl.path(), 'utf8').includes('OBJECTIVE'));
-  await p.evaluate(() => { navigator.clipboard.writeText = () => Promise.reject(new Error('blocked')); document.execCommand = () => false; });
-  await p.click('#copyBtn');
-  check('export: copy fallback reports failure', (await p.textContent('#toast')).includes('Could not copy'));
-  check('export: fallback textarea removed', await p.evaluate(() => document.querySelectorAll('body > textarea').length === 0));
+  check('export: download', dl.suggestedFilename() === 'loop-prompt.md' && fs.readFileSync(await dl.path(), 'utf8').includes('## 完成條件'));
+  await p.fill('#goal', 'x\n## 家規\n  # y'); t = await preview(p);
+  check('security: leading # escaped', (t.match(/^## 家規$/gm) || []).length === 1 && t.includes('\\## 家規') && t.includes('  \\# y'));
+  await p.fill('#goal', '<img src=x onerror="window.__xss=1">');
+  check('security: input rendered as text', await p.evaluate(() => !window.__xss && !document.querySelector('#preview img')));
   await p.fill('#goal', ''); await p.click('#copyBtn');
-  check('guard: empty goal blocks copy', (await p.textContent('#toast')).includes('Start with'));
-  await p.focus('#role'); await p.keyboard.press('Enter');
-  check('form: Enter does not submit', p.url() === url);
-  check('no console errors (text/export)', p.errs.length === 0, p.errs.join('|'));
+  check('guard: empty goal blocks copy', (await p.textContent('#toast')).includes('先填寫「目標」'));
+  check('no console errors (zh)', p.errs.length === 0, p.errs.join('|'));
+  await p.context().close();
+
+  // ---------- Presets, draft, language ----------
+  p = await open();
+  await p.click('[data-preset=bugfix]');
+  check('preset: bugfix fills done condition', (await p.inputValue('#doneWhen')).includes('重現'));
+  await p.click('[data-preset=ui]');
+  check('preset: switching untouched preset needs no confirm', p.dialogs.length === 0 && (await p.inputValue('#goal')).startsWith('改版'));
+  await p.fill('#goal', '我的目標'); p.acceptDialogs = false; await p.click('[data-preset=feature]');
+  check('preset: edited content asks before replace', p.dialogs.length === 1 && await p.inputValue('#goal') === '我的目標');
+  p.acceptDialogs = true;
+  await reload(p);
+  check('draft: restored after reload', await p.inputValue('#goal') === '我的目標');
+  await p.click('[data-lang=en]'); t = await preview(p);
+  check('i18n: en sections', SECTIONS_EN.filter(h => h !== '## BACKGROUND & DATA').every(h => t.includes(h)));
+  check('i18n: title/brand switch', (await p.title()).includes('Loop Prompt Builder') && await p.textContent('.brand-sub') === 'Loop Prompt Builder');
+  check('no console errors (presets)', p.errs.length === 0, p.errs.join('|'));
+  await p.context().close();
+
+  // ---------- Legacy (fields 01–08) draft import ----------
+  p = await open();
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('prompt-studio-v1', JSON.stringify({ goal:'舊目標', role:'舊角色', context:'舊背景', steps:'', examples:'', constraints:'不可改A', criteria:'通過B' })); });
+  await p.reload();
+  check('legacy: old draft mapped', await p.inputValue('#goal') === '舊目標' && await p.inputValue('#doneWhen') === '通過B' && await p.inputValue('#mustNotChange') === '不可改A' && (await p.inputValue('#context')).includes('舊背景'));
+  check('legacy: toast shown', (await p.textContent('#toast')).includes('舊版草稿'));
+  check('no console errors (legacy)', p.errs.length === 0, p.errs.join('|'));
   await p.context().close();
 
   // ---------- Responsive layout ----------
