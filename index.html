@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f5f2">
-  <meta name="description" content="用 Loop Engineering 寫 AI 指令：目標、可自動檢查的完成條件、範圍、迴圈與獨立檢查。">
-  <title>Prompt Studio — Loop 指令工坊</title>
+  <meta name="description" content="用 Loop Engineering 設計 AI 工作規格：規則與上下文、多步驗證迴圈、自動化測試與交付、人類設計 AI 執行。">
+  <title>Prompt Studio — Loop 規格設計</title>
   <link rel="icon" href="data:,">
   <style>
     :root {
@@ -162,21 +162,36 @@
     @media (max-width: 980px), (hover: none) and (pointer: coarse) {
       input[type="text"], textarea, select { font-size: 16px; }
     }
-    /* Loop Engineering additions */
+    /* Loop Engineering v2 additions */
     input[type="number"] { width: 100%; border: 1px solid var(--line); background: #fcfcfa; color: var(--ink); border-radius: 9px; padding: 10px 11px; outline: none; font-size: 12px; }
     input[type="number"]:focus { border-color: #989c91; box-shadow: 0 0 0 3px rgba(76, 86, 71, .07); }
-    input.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
-    .loop-strip { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 23px; color: var(--muted); font-size: 11px; }
-    .loop-strip span.step { border: 1px solid var(--line-strong); border-radius: 99px; padding: 4px 11px; background: var(--surface); color: #555850; }
+    input.mono, textarea.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 23px; }
+    .compare-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 14px 16px; }
+    .compare-card.past { background: transparent; color: var(--muted); }
+    .compare-card h2 { margin: 0 0 8px; font-size: 12px; font-weight: 650; letter-spacing: .02em; }
+    .compare-card.past h2 { color: #8c8e86; }
+    .compare-card ol { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.9; }
+    .compare-card.past li { text-decoration: line-through; text-decoration-color: #c9cbc3; }
+    .pillar { padding: 20px 0 6px; border-bottom: 1px solid var(--line-strong); }
+    .pillar:last-child { border-bottom: 0; }
+    .pillar-head { display: flex; align-items: baseline; gap: 10px; }
+    .pillar-num { font-family: Georgia, serif; font-size: 15px; color: var(--ink); }
+    .pillar-title { font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
+    .pillar-hint { color: var(--muted); font-size: 10px; margin: 3px 0 0 25px; }
+    .pillar .section { padding: 15px 0 13px; }
+    .pillar .section:last-child { border-bottom: 0; }
     .mode-switch { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 8px; padding: 2px; gap: 2px; margin-right: auto; }
     .mode-switch button { border: 0; background: transparent; color: var(--muted); border-radius: 6px; padding: 5px 9px; font-size: 10px; }
     .mode-switch button.active { background: var(--ink); color: #fff; }
     .rule-text { line-height: 1.5; }
     @media (max-width: 620px) {
-      input[type="number"] { font-size: 16px; }
+      .compare { grid-template-columns: 1fr; }
       .mode-switch { width: 100%; margin-bottom: 4px; }
       .mode-switch button { flex: 1; font-size: 12px; padding: 7px 9px; }
-      .loop-strip { font-size: 12px; }
+      .compare-card h2, .pillar-title { font-size: 14px; }
+      .compare-card ol { font-size: 13px; }
+      .pillar-hint { font-size: 12px; margin-left: 0; }
     }
     @media (max-width: 980px), (hover: none) and (pointer: coarse) { input[type="number"] { font-size: 16px; } }
   </style>
@@ -185,7 +200,7 @@
   <header class="topbar">
     <a class="brand" href="#top" aria-label="Prompt Studio home">
       <span class="brand-mark">P.</span>
-      <span class="brand-name">PROMPT STUDIO <span class="brand-sub" data-i18n="brandSub">Loop 指令工坊</span></span>
+      <span class="brand-name">PROMPT STUDIO <span class="brand-sub" data-i18n="brandSub">Loop 規格設計</span></span>
     </a>
     <div class="top-actions">
       <button class="text-btn" id="resetBtn" data-i18n="reset">清空內容</button>
@@ -199,16 +214,23 @@
   <main id="top">
     <section class="hero">
       <div>
-        <div class="eyebrow" data-i18n="eyebrow">LOOP ENGINEERING / 02</div>
-        <h1 data-i18n="headline">給 AI 一個<br>能自己驗收的目標。</h1>
-        <p class="hero-copy" data-i18n="subhead">先寫清楚目標、用程式就能檢查的完成條件、不能碰的範圍。AI 會反覆「收集 → 行動 → 驗證」，直到檢查全部通過，最後由獨立檢查者確認。</p>
+        <div class="eyebrow" data-i18n="eyebrow">LOOP ENGINEERING / 03</div>
+        <h1 data-i18n="headline">人類設計迴圈，<br>AI 負責執行。</h1>
+        <p class="hero-copy" data-i18n="subhead">不再追求一段「最佳 Prompt」。在這裡設計一份迴圈規格：規則與上下文、每一步怎麼驗證、怎樣才能交付、哪些事要先問你。AI 照著規格反覆執行與驗證，直到全部通過。</p>
       </div>
-      <div class="hero-note"><span data-i18n="heroNote1">不是告訴 AI 怎麼做</span><br><span data-i18n="heroNote2">而是告訴它怎樣才算做完</span></div>
+      <div class="hero-note"><span data-i18n="heroNote1">你定規則與檢查</span><br><span data-i18n="heroNote2">AI 在規則內自己跑完</span></div>
     </section>
 
-    <div class="loop-strip" aria-hidden="true">
-      <span class="step" data-i18n="loopGather">收集</span>→<span class="step" data-i18n="loopAct">行動</span>→<span class="step" data-i18n="loopVerify">驗證</span>→<span data-i18n="loopRepeat">未通過就再來一輪</span>→<span class="step" data-i18n="loopCheck">獨立檢查</span>
-    </div>
+    <section class="compare" aria-label="Past vs now">
+      <div class="compare-card past">
+        <h2 data-i18n="pastTitle">過去：對話式開發</h2>
+        <ol><li data-i18n="past1">找最佳 Prompt</li><li data-i18n="past2">單次對話</li><li data-i18n="past3">人工檢查與整合</li><li data-i18n="past4">AI 主導流程</li></ol>
+      </div>
+      <div class="compare-card">
+        <h2 data-i18n="nowTitle">現在：Loop Engineering</h2>
+        <ol><li data-i18n="now1">定義規則與上下文</li><li data-i18n="now2">多步驗證迴圈</li><li data-i18n="now3">自動化測試與交付</li><li data-i18n="now4">人類設計，AI 執行</li></ol>
+      </div>
+    </section>
 
     <section class="preset-wrap" aria-label="Task presets">
       <span class="preset-label" data-i18n="presetLabel">快速開始</span>
@@ -221,94 +243,125 @@
     </section>
 
     <div class="workspace">
-      <section class="form-panel" aria-label="Loop brief form">
+      <section class="form-panel" aria-label="Loop spec form">
         <div class="panel-head">
-          <div class="panel-title" data-i18n="formTitle">迴圈設定</div>
-          <div class="panel-kicker" data-i18n="formKicker">LOOP BRIEF</div>
+          <div class="panel-title" data-i18n="formTitle">迴圈規格</div>
+          <div class="panel-kicker" data-i18n="formKicker">LOOP SPEC</div>
         </div>
         <form id="promptForm" class="form-body" autocomplete="off">
-          <section class="section">
-            <div class="section-head"><span class="number">01</span><span class="section-title" data-i18n="s1">目標</span></div>
-            <p class="hint" data-i18n="s1hint">一句話說清楚最後要得到什麼結果。</p>
-            <textarea id="goal" class="short" data-i18n-placeholder="goalPh" placeholder="例如：修好手機版登入頁「送出」按鈕被鍵盤遮住的問題。"></textarea>
-          </section>
 
-          <section class="section">
-            <div class="section-head"><span class="number">02</span><span class="section-title" data-i18n="s2">完成條件</span></div>
-            <p class="hint" data-i18n="s2hint">每行一條，最好是程式能判斷對錯的檢查。全部通過才算完成。</p>
-            <textarea id="doneWhen" data-i18n-placeholder="doneWhenPh" placeholder="例如：
-tests/login.spec.ts 全部通過
-在 390px 寬的畫面上，按鈕完整可見
-主控台沒有錯誤"></textarea>
-            <div style="margin-top:12px">
-              <label class="field-label" for="verifyCmd" data-i18n="verifyLabel">驗證指令（結束碼 0 才算通過）</label>
-              <input type="text" id="verifyCmd" class="mono" data-i18n-placeholder="verifyPh" placeholder="例如：npm test && npm run build && npm run lint">
-            </div>
-          </section>
-
-          <section class="section">
-            <div class="section-head"><span class="number">03</span><span class="section-title" data-i18n="s3">範圍與不可改動</span><span class="optional" data-i18n="optional">選填</span></div>
-            <p class="hint" data-i18n="s3hint">劃出能動的地方，以及絕對不能動的東西。</p>
-            <div class="field-stack">
-              <div>
-                <label class="field-label" for="scope" data-i18n="scopeLabel">可以修改</label>
-                <input type="text" id="scope" data-i18n-placeholder="scopePh" placeholder="例如：src/pages/login/ 與它的測試">
+          <section class="pillar" id="pillar1">
+            <div class="pillar-head"><span class="pillar-num">一</span><span class="pillar-title" data-i18n="p1">定義規則與上下文</span></div>
+            <p class="pillar-hint" data-i18n="p1hint">先把目標、規則、資料和範圍定清楚，AI 才不用猜。</p>
+            <section class="section">
+              <div class="section-head"><span class="section-title" data-i18n="goalLabel">目標</span></div>
+              <textarea id="goal" class="short" data-i18n-placeholder="goalPh" placeholder="例如：修好手機版登入頁「送出」按鈕被鍵盤遮住的問題。"></textarea>
+            </section>
+            <section class="section">
+              <div class="section-head"><span class="section-title" data-i18n="rulesLabel">規則</span></div>
+              <div class="check-grid">
+                <label class="check-item"><input type="checkbox" id="ruleAssume" checked><span class="rule-text" data-i18n="ruleAssume">先講清楚假設：不確定先問，不要自己猜</span></label>
+                <label class="check-item"><input type="checkbox" id="ruleSimple" checked><span class="rule-text" data-i18n="ruleSimple">不要過度工程化：能簡單解決就不要加戲(除非必要結構)</span></label>
+                <label class="check-item"><input type="checkbox" id="ruleScope" checked><span class="rule-text" data-i18n="ruleScope">不碰無關範圍：修Bug就修Bug，不要順手重構全世界</span></label>
+                <label class="check-item"><input type="checkbox" id="ruleVerify" checked><span class="rule-text" data-i18n="ruleVerify">做完必須驗證：跑測試、看結果確認真的可以用</span></label>
               </div>
-              <div>
-                <label class="field-label" for="mustNotChange" data-i18n="mustNotLabel">不可改動（每行一條）</label>
-                <textarea id="mustNotChange" class="short" data-i18n-placeholder="mustNotPh" placeholder="例如：
-公開 API 與資料庫結構
+              <label class="field-label" for="projectRules" data-i18n="projectRulesLabel" style="margin-top:12px">專案規則／不可改動（每行一條）</label>
+              <textarea id="projectRules" class="short" data-i18n-placeholder="projectRulesPh" placeholder="例如：
+公開 API 與資料庫結構不可改
 既有測試不可刪除或放寬
 不新增套件"></textarea>
-              </div>
-            </div>
+            </section>
+            <section class="section">
+              <div class="section-head"><span class="section-title" data-i18n="contextLabel">上下文</span><span class="optional" data-i18n="optional">選填</span></div>
+              <textarea id="context" class="short" data-i18n-placeholder="contextPh" placeholder="相關檔案、專案地圖、背景、錯誤訊息、連結。只放 AI 需要的。"></textarea>
+              <label class="field-label" for="scope" data-i18n="scopeLabel" style="margin-top:12px">可以修改的範圍</label>
+              <input type="text" id="scope" data-i18n-placeholder="scopePh" placeholder="例如：src/pages/login/ 與它的測試">
+            </section>
           </section>
 
-          <section class="section">
-            <div class="section-head"><span class="number">04</span><span class="section-title" data-i18n="s4">背景與資料</span><span class="optional" data-i18n="optional">選填</span></div>
-            <p class="hint" data-i18n="s4hint">只放 AI 需要知道的：現況、相關檔案、錯誤訊息、連結。</p>
-            <textarea id="context" class="short" data-i18n-placeholder="contextPh" placeholder="例如：問題只在 iOS Safari 出現；相關檔案是 LoginForm.tsx；錯誤截圖說明……"></textarea>
+          <section class="pillar" id="pillar2">
+            <div class="pillar-head"><span class="pillar-num">二</span><span class="pillar-title" data-i18n="p2">多步驗證迴圈</span></div>
+            <p class="pillar-hint" data-i18n="p2hint">把工作拆成步驟，每一步都有自己的檢查；通過才進下一步。</p>
+            <section class="section">
+              <div class="section-head"><span class="section-title" data-i18n="stepsLabel">步驟與檢查</span></div>
+              <p class="hint" style="margin-left:0" data-i18n="stepsHint">每行一步，用「|」隔開步驟和它的檢查。</p>
+              <textarea id="steps" data-i18n-placeholder="stepsPh" placeholder="例如：
+寫一個重現 Bug 的測試 | 測試先失敗
+修正版面 | 測試通過
+全站回歸 | npm test 全部通過"></textarea>
+            </section>
+            <section class="section">
+              <div class="select-row">
+                <div>
+                  <label class="field-label" for="maxTurns" data-i18n="maxTurnsLabel">最多回合數</label>
+                  <input type="number" id="maxTurns" min="1" max="200" value="20">
+                </div>
+                <div>
+                  <label class="field-label" for="notesFile" data-i18n="notesLabel">進度筆記檔（留空不使用）</label>
+                  <input type="text" id="notesFile" class="mono" value="PROGRESS.md" placeholder="PROGRESS.md">
+                </div>
+              </div>
+              <div class="field-note" data-i18n="failNote">失敗處理固定為：同一項檢查連續失敗 2 次就換方法；仍然失敗就停下來回報原因和證據。</div>
+            </section>
           </section>
 
-          <section class="section">
-            <div class="section-head"><span class="number">05</span><span class="section-title" data-i18n="s5">迴圈與檢查</span></div>
-            <div class="select-row">
-              <div>
-                <label class="field-label" for="maxTurns" data-i18n="maxTurnsLabel">最多回合數</label>
-                <input type="number" id="maxTurns" min="1" max="200" value="20">
+          <section class="pillar" id="pillar3">
+            <div class="pillar-head"><span class="pillar-num">三</span><span class="pillar-title" data-i18n="p3">自動化測試與交付</span></div>
+            <p class="pillar-hint" data-i18n="p3hint">用程式判斷是否完成，由獨立檢查者確認後才交付。</p>
+            <section class="section">
+              <label class="field-label" for="verifyCmd" data-i18n="verifyLabel">驗證指令（結束碼 0 才算通過）</label>
+              <input type="text" id="verifyCmd" class="mono" data-i18n-placeholder="verifyPh" placeholder="例如：npm test && npm run build && npm run lint">
+              <label class="field-label" for="doneWhen" data-i18n="doneWhenLabel" style="margin-top:12px">其他完成條件（每行一條）</label>
+              <textarea id="doneWhen" class="short" data-i18n-placeholder="doneWhenPh" placeholder="例如：
+390px 寬的畫面上按鈕完整可見
+主控台沒有錯誤"></textarea>
+            </section>
+            <section class="section">
+              <div class="select-row">
+                <div>
+                  <label class="field-label" for="checker" data-i18n="checkerLabel">獨立檢查者</label>
+                  <select id="checker">
+                    <option value="subagent" data-i18n="checkerSubagent">另開子代理驗收（只讀不改）</option>
+                    <option value="fresh" data-i18n="checkerFresh">新對話重新驗收</option>
+                    <option value="human" data-i18n="checkerHuman">由我親自驗收</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="field-label" for="delivery" data-i18n="deliveryLabel">交付物</label>
+                  <select id="delivery">
+                    <option value="commit" data-i18n="deliveryCommit">本機 commit（不推送）</option>
+                    <option value="pr" data-i18n="deliveryPr">推到新分支並開 PR</option>
+                    <option value="files" data-i18n="deliveryFiles">修改後的檔案</option>
+                    <option value="report" data-i18n="deliveryReport">只交報告，不改檔</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label class="field-label" for="checker" data-i18n="checkerLabel">獨立檢查者</label>
-                <select id="checker">
-                  <option value="subagent" data-i18n="checkerSubagent">另開子代理驗收（只讀不改）</option>
-                  <option value="fresh" data-i18n="checkerFresh">新對話重新驗收</option>
-                  <option value="human" data-i18n="checkerHuman">由我親自驗收</option>
-                </select>
-              </div>
-            </div>
-            <div style="margin-top:12px">
-              <label class="field-label" for="notesFile" data-i18n="notesLabel">進度筆記檔（留空就不使用）</label>
-              <input type="text" id="notesFile" class="mono" value="PROGRESS.md" placeholder="PROGRESS.md">
-              <div class="field-note" data-i18n="notesNote">每回合把進度寫進這個檔案；對話壓縮或中斷後，AI 先讀它再繼續。</div>
-            </div>
+            </section>
           </section>
 
-          <section class="section">
-            <div class="section-head"><span class="number">06</span><span class="section-title" data-i18n="s6">家規</span></div>
-            <div class="check-grid">
-              <label class="check-item"><input type="checkbox" id="ruleAssume" checked><span class="rule-text" data-i18n="ruleAssume">先講清楚假設：不確定先問，不要自己猜</span></label>
-              <label class="check-item"><input type="checkbox" id="ruleSimple" checked><span class="rule-text" data-i18n="ruleSimple">不要過度工程化：能簡單解決就不要加戲(除非必要結構)</span></label>
-              <label class="check-item"><input type="checkbox" id="ruleScope" checked><span class="rule-text" data-i18n="ruleScope">不碰無關範圍：修Bug就修Bug，不要順手重構全世界</span></label>
-              <label class="check-item"><input type="checkbox" id="ruleVerify" checked><span class="rule-text" data-i18n="ruleVerify">做完必須驗證：跑測試、看結果確認真的可以用</span></label>
-            </div>
+          <section class="pillar" id="pillar4">
+            <div class="pillar-head"><span class="pillar-num">四</span><span class="pillar-title" data-i18n="p4">人類設計，AI 執行</span></div>
+            <p class="pillar-hint" data-i18n="p4hint">規格內 AI 自己決定怎麼做；以下事情必須先問你。</p>
+            <section class="section">
+              <div class="section-head"><span class="section-title" data-i18n="approvalLabel">需要我批准</span></div>
+              <div class="check-grid">
+                <label class="check-item"><input type="checkbox" id="askDeploy" checked><span data-i18n="askDeploy">部署／上線、推送到 main</span></label>
+                <label class="check-item"><input type="checkbox" id="askDelete" checked><span data-i18n="askDelete">刪除檔案、資料或分支</span></label>
+                <label class="check-item"><input type="checkbox" id="askSpend" checked><span data-i18n="askSpend">花錢、購買、付費 API</span></label>
+                <label class="check-item"><input type="checkbox" id="askSend" checked><span data-i18n="askSend">對外發送（Email、訊息、貼文）</span></label>
+                <label class="check-item"><input type="checkbox" id="askInstall"><span data-i18n="askInstall">安裝新套件或工具</span></label>
+              </div>
+              <label class="field-label" for="otherApprovals" data-i18n="otherApprovalsLabel" style="margin-top:12px">其他需要我批准的事</label>
+              <input type="text" id="otherApprovals" data-i18n-placeholder="otherApprovalsPh" placeholder="例如：改動資料庫結構">
+            </section>
           </section>
         </form>
       </section>
 
-      <aside class="output-panel" aria-label="Generated prompt preview">
+      <aside class="output-panel" aria-label="Generated loop spec preview">
         <div class="output-head">
           <div class="output-head-top">
-            <div class="output-title-wrap"><span class="live-dot"></span><span class="panel-title" data-i18n="outputTitle">指令預覽</span></div>
+            <div class="output-title-wrap"><span class="live-dot"></span><span class="panel-title" data-i18n="outputTitle">規格預覽</span></div>
             <div class="quality"><span data-i18n="completeness">完整度</span> <strong id="score">0%</strong></div>
           </div>
           <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
@@ -316,7 +369,7 @@ tests/login.spec.ts 全部通過
         </div>
         <div class="output-controls">
           <div class="mode-switch" role="group" aria-label="Output mode">
-            <button type="button" data-mode="full" class="active" aria-pressed="true" data-i18n="modeFull">完整指令</button>
+            <button type="button" data-mode="full" class="active" aria-pressed="true" data-i18n="modeFull">迴圈規格</button>
             <button type="button" data-mode="goal" aria-pressed="false" data-i18n="modeGoal">/goal 指令</button>
           </div>
           <button class="control-btn primary" id="copyBtn" data-i18n="copy">複製</button>
@@ -328,88 +381,103 @@ tests/login.spec.ts 全部通過
       </aside>
     </div>
 
-    <div class="footnote"><span data-i18n="footLeft">好的迴圈指令不在長，而在「怎樣算完成」能被機器判斷。</span><span>© PROMPT STUDIO</span></div>
+    <div class="footnote"><span data-i18n="footLeft">重點不是 Prompt 寫得多好，而是規則、檢查與交付條件定得多清楚。</span><span>© PROMPT STUDIO</span></div>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
     (() => {
       const $ = (id) => document.getElementById(id);
-      const textFields = ['goal','doneWhen','verifyCmd','scope','mustNotChange','context','notesFile'];
-      const selectFields = ['checker'];
-      const checkFields = ['ruleAssume','ruleSimple','ruleScope','ruleVerify'];
+      const textFields = ['goal','projectRules','context','scope','steps','notesFile','verifyCmd','doneWhen','otherApprovals'];
+      const selectFields = ['checker','delivery'];
+      const ruleFields = ['ruleAssume','ruleSimple','ruleScope','ruleVerify'];
+      const askFields = ['askDeploy','askDelete','askSpend','askSend','askInstall'];
+      const checkFields = [...ruleFields, ...askFields];
       const fields = [...textFields, 'maxTurns', ...selectFields, ...checkFields];
-      const storageKey = 'prompt-studio-loop-v1';
+      const storageKey = 'prompt-studio-loop-v2';
+      const loopV1Key = 'prompt-studio-loop-v1';
       const legacyKey = 'prompt-studio-v1';
       const translations = {
         zh: {
-          brandSub:'Loop 指令工坊', reset:'清空內容', eyebrow:'LOOP ENGINEERING / 02', headline:'給 AI 一個<br>能自己驗收的目標。',
-          subhead:'先寫清楚目標、用程式就能檢查的完成條件、不能碰的範圍。AI 會反覆「收集 → 行動 → 驗證」，直到檢查全部通過，最後由獨立檢查者確認。',
-          heroNote1:'不是告訴 AI 怎麼做', heroNote2:'而是告訴它怎樣才算做完',
-          loopGather:'收集', loopAct:'行動', loopVerify:'驗證', loopRepeat:'未通過就再來一輪', loopCheck:'獨立檢查',
+          brandSub:'Loop 規格設計', reset:'清空內容', eyebrow:'LOOP ENGINEERING / 03', headline:'人類設計迴圈，<br>AI 負責執行。',
+          subhead:'不再追求一段「最佳 Prompt」。在這裡設計一份迴圈規格：規則與上下文、每一步怎麼驗證、怎樣才能交付、哪些事要先問你。AI 照著規格反覆執行與驗證，直到全部通過。',
+          heroNote1:'你定規則與檢查', heroNote2:'AI 在規則內自己跑完',
+          pastTitle:'過去：對話式開發', past1:'找最佳 Prompt', past2:'單次對話', past3:'人工檢查與整合', past4:'AI 主導流程',
+          nowTitle:'現在：Loop Engineering', now1:'定義規則與上下文', now2:'多步驗證迴圈', now3:'自動化測試與交付', now4:'人類設計，AI 執行',
           presetLabel:'快速開始', presetBugfix:'修 Bug', presetFeature:'新功能', presetRefactor:'重構', presetUi:'網站／介面改版', presetResearch:'研究整理', presetBlank:'從空白開始',
-          formTitle:'迴圈設定', formKicker:'LOOP BRIEF',
-          s1:'目標', s1hint:'一句話說清楚最後要得到什麼結果。', goalPh:'例如：修好手機版登入頁「送出」按鈕被鍵盤遮住的問題。',
-          s2:'完成條件', s2hint:'每行一條，最好是程式能判斷對錯的檢查。全部通過才算完成。', doneWhenPh:'例如：\ntests/login.spec.ts 全部通過\n在 390px 寬的畫面上，按鈕完整可見\n主控台沒有錯誤',
-          verifyLabel:'驗證指令（結束碼 0 才算通過）', verifyPh:'例如：npm test && npm run build && npm run lint',
-          s3:'範圍與不可改動', s3hint:'劃出能動的地方，以及絕對不能動的東西。', scopeLabel:'可以修改', scopePh:'例如：src/pages/login/ 與它的測試',
-          mustNotLabel:'不可改動（每行一條）', mustNotPh:'例如：\n公開 API 與資料庫結構\n既有測試不可刪除或放寬\n不新增套件',
-          s4:'背景與資料', s4hint:'只放 AI 需要知道的：現況、相關檔案、錯誤訊息、連結。', contextPh:'例如：問題只在 iOS Safari 出現；相關檔案是 LoginForm.tsx；錯誤截圖說明……',
-          s5:'迴圈與檢查', maxTurnsLabel:'最多回合數', checkerLabel:'獨立檢查者', checkerSubagent:'另開子代理驗收（只讀不改）', checkerFresh:'新對話重新驗收', checkerHuman:'由我親自驗收',
-          notesLabel:'進度筆記檔（留空就不使用）', notesNote:'每回合把進度寫進這個檔案；對話壓縮或中斷後，AI 先讀它再繼續。',
-          s6:'家規', ruleAssume:'先講清楚假設：不確定先問，不要自己猜', ruleSimple:'不要過度工程化：能簡單解決就不要加戲(除非必要結構)', ruleScope:'不碰無關範圍：修Bug就修Bug，不要順手重構全世界', ruleVerify:'做完必須驗證：跑測試、看結果確認真的可以用',
-          optional:'選填', outputTitle:'指令預覽', completeness:'完整度', modeFull:'完整指令', modeGoal:'/goal 指令', copy:'複製', download:'下載 .md', loadExample:'載入示範',
-          emptyFull:'你的迴圈指令會出現在這裡。<br>先寫下目標。', emptyGoal:'/goal 需要「目標」和至少一條完成條件或驗證指令。',
-          savedLocally:'草稿自動儲存在此裝置', localOnly:'不會上傳至伺服器', footLeft:'好的迴圈指令不在長，而在「怎樣算完成」能被機器判斷。',
-          progress:'已完成 {n} / 5 個迴圈要素', chars:'{n} 字元', copied:'已複製', copyFail:'無法自動複製，請手動選取文字', downloaded:'檔案已準備下載',
+          formTitle:'迴圈規格', formKicker:'LOOP SPEC', optional:'選填',
+          p1:'定義規則與上下文', p1hint:'先把目標、規則、資料和範圍定清楚，AI 才不用猜。', goalLabel:'目標', goalPh:'例如：修好手機版登入頁「送出」按鈕被鍵盤遮住的問題。',
+          rulesLabel:'規則', ruleAssume:'先講清楚假設：不確定先問，不要自己猜', ruleSimple:'不要過度工程化：能簡單解決就不要加戲(除非必要結構)', ruleScope:'不碰無關範圍：修Bug就修Bug，不要順手重構全世界', ruleVerify:'做完必須驗證：跑測試、看結果確認真的可以用',
+          projectRulesLabel:'專案規則／不可改動（每行一條）', projectRulesPh:'例如：\n公開 API 與資料庫結構不可改\n既有測試不可刪除或放寬\n不新增套件',
+          contextLabel:'上下文', contextPh:'相關檔案、專案地圖、背景、錯誤訊息、連結。只放 AI 需要的。', scopeLabel:'可以修改的範圍', scopePh:'例如：src/pages/login/ 與它的測試',
+          p2:'多步驗證迴圈', p2hint:'把工作拆成步驟，每一步都有自己的檢查；通過才進下一步。', stepsLabel:'步驟與檢查', stepsHint:'每行一步，用「|」隔開步驟和它的檢查。',
+          stepsPh:'例如：\n寫一個重現 Bug 的測試 | 測試先失敗\n修正版面 | 測試通過\n全站回歸 | npm test 全部通過',
+          maxTurnsLabel:'最多回合數', notesLabel:'進度筆記檔（留空不使用）', failNote:'失敗處理固定為：同一項檢查連續失敗 2 次就換方法；仍然失敗就停下來回報原因和證據。',
+          p3:'自動化測試與交付', p3hint:'用程式判斷是否完成，由獨立檢查者確認後才交付。', verifyLabel:'驗證指令（結束碼 0 才算通過）', verifyPh:'例如：npm test && npm run build && npm run lint',
+          doneWhenLabel:'其他完成條件（每行一條）', doneWhenPh:'例如：\n390px 寬的畫面上按鈕完整可見\n主控台沒有錯誤',
+          checkerLabel:'獨立檢查者', checkerSubagent:'另開子代理驗收（只讀不改）', checkerFresh:'新對話重新驗收', checkerHuman:'由我親自驗收',
+          deliveryLabel:'交付物', deliveryCommit:'本機 commit（不推送）', deliveryPr:'推到新分支並開 PR', deliveryFiles:'修改後的檔案', deliveryReport:'只交報告，不改檔',
+          p4:'人類設計，AI 執行', p4hint:'規格內 AI 自己決定怎麼做；以下事情必須先問你。', approvalLabel:'需要我批准',
+          askDeploy:'部署／上線、推送到 main', askDelete:'刪除檔案、資料或分支', askSpend:'花錢、購買、付費 API', askSend:'對外發送（Email、訊息、貼文）', askInstall:'安裝新套件或工具',
+          otherApprovalsLabel:'其他需要我批准的事', otherApprovalsPh:'例如：改動資料庫結構',
+          outputTitle:'規格預覽', completeness:'完整度', modeFull:'迴圈規格', modeGoal:'/goal 指令', copy:'複製', download:'下載 .md', loadExample:'載入示範',
+          emptyFull:'你的迴圈規格會出現在這裡。<br>先寫下目標。', emptyGoal:'/goal 需要「目標」和至少一條完成條件或驗證指令。',
+          savedLocally:'草稿自動儲存在此裝置', localOnly:'不會上傳至伺服器', footLeft:'重點不是 Prompt 寫得多好，而是規則、檢查與交付條件定得多清楚。',
+          progress:'已完成 {n} / 4 根支柱', chars:'{n} 字元', copied:'已複製', copyFail:'無法自動複製，請手動選取文字', downloaded:'檔案已準備下載',
           resetDone:'已清空所有欄位', exampleLoaded:'已載入示範', needGoal:'先填寫「目標」。', needDone:'/goal 還需要完成條件或驗證指令。',
           legacyImported:'已把舊版草稿匯入新欄位', confirmReplace:'載入後會取代目前已填寫的內容，確定嗎？', confirmClear:'確定要清空所有內容嗎？',
-          pageTitle:'Prompt Studio — Loop 指令工坊', metaDesc:'用 Loop Engineering 寫 AI 指令：目標、可自動檢查的完成條件、範圍、迴圈與獨立檢查。'
+          pageTitle:'Prompt Studio — Loop 規格設計', metaDesc:'用 Loop Engineering 設計 AI 工作規格：規則與上下文、多步驗證迴圈、自動化測試與交付、人類設計 AI 執行。'
         },
         en: {
-          brandSub:'Loop Prompt Builder', reset:'Clear', eyebrow:'LOOP ENGINEERING / 02', headline:'Give the AI a goal<br>it can verify itself.',
-          subhead:'State the goal, a done condition a program can check, and what must not change. The AI loops gather → act → verify until every check passes, then an independent checker confirms.',
-          heroNote1:'Don’t tell the AI how', heroNote2:'tell it what “done” means',
-          loopGather:'Gather', loopAct:'Act', loopVerify:'Verify', loopRepeat:'repeat until it passes', loopCheck:'Independent check',
+          brandSub:'Loop Spec Designer', reset:'Clear', eyebrow:'LOOP ENGINEERING / 03', headline:'Humans design the loop.<br>AI executes it.',
+          subhead:'Stop hunting for the “best prompt”. Design a loop spec here: rules and context, how each step is verified, what may be delivered, and what needs your approval. The AI runs and verifies against the spec until everything passes.',
+          heroNote1:'You set rules and checks', heroNote2:'the AI runs inside them',
+          pastTitle:'Past: conversational development', past1:'Hunt for the best prompt', past2:'Single conversation', past3:'Manual checking and integration', past4:'AI drives the process',
+          nowTitle:'Now: Loop Engineering', now1:'Define rules and context', now2:'Multi-step verification loop', now3:'Automated testing and delivery', now4:'Humans design, AI executes',
           presetLabel:'Quick start', presetBugfix:'Bug fix', presetFeature:'New feature', presetRefactor:'Refactor', presetUi:'Site / UI redesign', presetResearch:'Research', presetBlank:'Start blank',
-          formTitle:'Loop settings', formKicker:'LOOP BRIEF',
-          s1:'Goal', s1hint:'One sentence: the result you want at the end.', goalPh:'e.g. Fix the mobile login page where the keyboard hides the Submit button.',
-          s2:'Done condition', s2hint:'One per line, ideally checks a program can judge. Done only when all pass.', doneWhenPh:'e.g.\ntests/login.spec.ts passes\nAt 390px wide the button is fully visible\nNo console errors',
-          verifyLabel:'Verify command (passes only on exit code 0)', verifyPh:'e.g. npm test && npm run build && npm run lint',
-          s3:'Scope & must not change', s3hint:'Where the AI may work, and what it must never touch.', scopeLabel:'May change', scopePh:'e.g. src/pages/login/ and its tests',
-          mustNotLabel:'Must not change (one per line)', mustNotPh:'e.g.\nPublic API and database schema\nExisting tests may not be deleted or loosened\nNo new dependencies',
-          s4:'Background & data', s4hint:'Only what the AI needs: current state, relevant files, errors, links.', contextPh:'e.g. Only happens on iOS Safari; relevant file is LoginForm.tsx; error details…',
-          s5:'Loop & checking', maxTurnsLabel:'Max turns', checkerLabel:'Independent checker', checkerSubagent:'Separate read-only subagent', checkerFresh:'Fresh session re-verifies', checkerHuman:'I verify myself',
-          notesLabel:'Progress notes file (leave empty to skip)', notesNote:'Progress is written here every turn; after compaction or interruption the AI reads it first.',
-          s6:'House rules', ruleAssume:'State assumptions first: ask when unsure, don’t guess', ruleSimple:'Don’t over-engineer: keep simple fixes simple (unless structure is needed)', ruleScope:'Stay in scope: fixing a bug means fixing the bug, not refactoring the world', ruleVerify:'Verify when done: run the tests and check the result really works',
-          optional:'optional', outputTitle:'Prompt preview', completeness:'Completeness', modeFull:'Full prompt', modeGoal:'/goal command', copy:'Copy', download:'Download .md', loadExample:'Load example',
-          emptyFull:'Your loop prompt will appear here.<br>Start with the goal.', emptyGoal:'/goal needs a goal and at least one done condition or verify command.',
-          savedLocally:'Draft auto-saved on this device', localOnly:'Never uploaded', footLeft:'A good loop prompt isn’t long; its “done” is something a machine can judge.',
-          progress:'{n} / 5 loop elements filled', chars:'{n} chars', copied:'Copied', copyFail:'Could not copy automatically; please select the text', downloaded:'Download ready',
+          formTitle:'Loop spec', formKicker:'LOOP SPEC', optional:'optional',
+          p1:'Define rules and context', p1hint:'Pin down goal, rules, data and scope so the AI never has to guess.', goalLabel:'Goal', goalPh:'e.g. Fix the mobile login page where the keyboard hides the Submit button.',
+          rulesLabel:'Rules', ruleAssume:'State assumptions first: ask when unsure, don’t guess', ruleSimple:'Don’t over-engineer: keep simple fixes simple (unless structure is needed)', ruleScope:'Stay in scope: fixing a bug means fixing the bug, not refactoring the world', ruleVerify:'Verify when done: run the tests and check the result really works',
+          projectRulesLabel:'Project rules / must not change (one per line)', projectRulesPh:'e.g.\nPublic API and database schema stay as they are\nExisting tests may not be deleted or loosened\nNo new dependencies',
+          contextLabel:'Context', contextPh:'Relevant files, project map, background, errors, links. Only what the AI needs.', scopeLabel:'May change', scopePh:'e.g. src/pages/login/ and its tests',
+          p2:'Multi-step verification loop', p2hint:'Split the work into steps, each with its own check; move on only when it passes.', stepsLabel:'Steps and checks', stepsHint:'One step per line; separate the step and its check with “|”.',
+          stepsPh:'e.g.\nWrite a test reproducing the bug | test fails first\nFix the layout | test passes\nFull regression | npm test passes',
+          maxTurnsLabel:'Max turns', notesLabel:'Progress notes file (empty = none)', failNote:'Failure policy is fixed: if the same check fails twice in a row, change approach; if it still fails, stop and report why with evidence.',
+          p3:'Automated testing and delivery', p3hint:'A program decides when it is done; an independent checker confirms before delivery.', verifyLabel:'Verify command (passes only on exit code 0)', verifyPh:'e.g. npm test && npm run build && npm run lint',
+          doneWhenLabel:'Other done conditions (one per line)', doneWhenPh:'e.g.\nButton fully visible at 390px wide\nNo console errors',
+          checkerLabel:'Independent checker', checkerSubagent:'Separate read-only subagent', checkerFresh:'Fresh session re-verifies', checkerHuman:'I verify myself',
+          deliveryLabel:'Deliverable', deliveryCommit:'Local commit (no push)', deliveryPr:'Push a new branch and open a PR', deliveryFiles:'Changed files', deliveryReport:'Report only, no file changes',
+          p4:'Humans design, AI executes', p4hint:'Inside the spec the AI decides how; these things need your approval first.', approvalLabel:'Needs my approval',
+          askDeploy:'Deploying / going live, pushing to main', askDelete:'Deleting files, data or branches', askSpend:'Spending money, purchases, paid APIs', askSend:'Sending externally (email, messages, posts)', askInstall:'Installing new packages or tools',
+          otherApprovalsLabel:'Anything else needing my approval', otherApprovalsPh:'e.g. changing the database schema',
+          outputTitle:'Spec preview', completeness:'Completeness', modeFull:'Loop spec', modeGoal:'/goal command', copy:'Copy', download:'Download .md', loadExample:'Load example',
+          emptyFull:'Your loop spec will appear here.<br>Start with the goal.', emptyGoal:'/goal needs a goal and at least one done condition or verify command.',
+          savedLocally:'Draft auto-saved on this device', localOnly:'Never uploaded', footLeft:'What matters is not how good the prompt is, but how clear the rules, checks and delivery conditions are.',
+          progress:'{n} / 4 pillars filled', chars:'{n} chars', copied:'Copied', copyFail:'Could not copy automatically; please select the text', downloaded:'Download ready',
           resetDone:'All fields cleared', exampleLoaded:'Example loaded', needGoal:'Fill in the goal first.', needDone:'/goal also needs a done condition or verify command.',
           legacyImported:'Old draft imported into the new fields', confirmReplace:'This will replace what you have entered. Continue?', confirmClear:'Clear all content?',
-          pageTitle:'Prompt Studio — Loop Prompt Builder', metaDesc:'Write AI prompts with Loop Engineering: goal, machine-checkable done condition, scope, loop and independent check.'
+          pageTitle:'Prompt Studio — Loop Spec Designer', metaDesc:'Design AI work specs with Loop Engineering: rules and context, multi-step verification loop, automated testing and delivery, humans design and AI executes.'
         }
       };
       const presetData = {
         zh: {
-          bugfix: { goal:'修好以下 Bug：（描述現象與重現步驟）', doneWhen:'先寫一個能重現這個 Bug 的測試，修好前它會失敗\n修好後這個測試通過\n既有測試全部通過', verifyCmd:'npm test', scope:'與這個 Bug 直接相關的檔案', mustNotChange:'不做與 Bug 無關的重構或格式調整\n既有測試不可刪除或放寬', context:'' },
-          feature: { goal:'新增功能：（一句話描述使用者能做到什麼）', doneWhen:'新功能有對應的測試並通過\n既有測試全部通過\n建置成功', verifyCmd:'npm test && npm run build', scope:'新功能需要的檔案', mustNotChange:'既有功能的行為\n公開 API\n不新增套件，除非先問過我', context:'' },
-          refactor: { goal:'重構：（要改善的模組與原因），外部行為完全不變', doneWhen:'重構前後同一組測試全部通過\n型別檢查與 lint 無錯誤', verifyCmd:'npm test && npm run lint', scope:'指定的模組', mustNotChange:'任何對外行為與輸出\n測試內容（只能新增，不能修改既有斷言）', context:'' },
-          ui: { goal:'改版：（頁面名稱）的介面與操作體驗', doneWhen:'建置成功\n頁面載入時主控台沒有錯誤\n390px 與 1440px 寬度都沒有水平捲軸\n改版前後截圖已存檔供比對', verifyCmd:'npm run build && npm test', scope:'該頁面的元件與樣式', mustNotChange:'資料格式與儲存方式\n其他頁面\n網址結構', context:'' },
-          research: { goal:'研究並整理：（主題），產出有來源的結論', doneWhen:'每個重點都附上可開啟的來源連結\n區分已查證事實與推論\n結論能回答最初的問題', verifyCmd:'', scope:'只產出報告檔，不修改其他檔案', mustNotChange:'不捏造數據或來源', context:'' }
+          bugfix: { goal:'修好以下 Bug：（描述現象與重現步驟）', projectRules:'不做與 Bug 無關的重構或格式調整\n既有測試不可刪除或放寬', scope:'與這個 Bug 直接相關的檔案', steps:'寫一個重現 Bug 的測試 | 測試先失敗\n找出原因並修正 | 新測試通過\n回歸檢查 | 既有測試全部通過', verifyCmd:'npm test', doneWhen:'', delivery:'commit' },
+          feature: { goal:'新增功能：（一句話描述使用者能做到什麼）', projectRules:'既有功能的行為不變\n公開 API 不變', scope:'新功能需要的檔案', steps:'先寫出這個功能的測試 | 測試先失敗\n實作功能 | 新測試通過\n整合與建置 | 測試與建置全部通過', verifyCmd:'npm test && npm run build', doneWhen:'', delivery:'commit' },
+          refactor: { goal:'重構：（要改善的模組與原因），外部行為完全不變', projectRules:'任何對外行為與輸出不變\n既有測試的斷言不可修改（只能新增）', scope:'指定的模組', steps:'記錄重構前的測試結果 | 測試全部通過\n小步重構 | 每一步後測試仍全部通過\n清理 | lint 與型別檢查無錯誤', verifyCmd:'npm test && npm run lint', doneWhen:'', delivery:'commit' },
+          ui: { goal:'改版：（頁面名稱）的介面與操作體驗', projectRules:'資料格式與儲存方式不變\n其他頁面不動\n網址結構不變', scope:'該頁面的元件與樣式', steps:'截下改版前的桌面與手機畫面 | 截圖已存檔\n改版介面 | 建置成功\n檢查版面 | 390px 與 1440px 沒有水平捲軸、主控台沒有錯誤', verifyCmd:'npm run build && npm test', doneWhen:'改版前後截圖已存檔供比對', delivery:'commit' },
+          research: { goal:'研究並整理：（主題），產出有來源的結論', projectRules:'不捏造數據或來源', scope:'只產出報告檔，不修改其他檔案', steps:'列出要回答的問題 | 問題清單經我確認\n蒐集資料 | 每個重點都有可開啟的來源\n寫結論 | 結論回答了每個問題', verifyCmd:'', doneWhen:'區分已查證事實與推論', delivery:'report' }
         },
         en: {
-          bugfix: { goal:'Fix this bug: (symptom and steps to reproduce)', doneWhen:'First write a test that reproduces the bug and fails before the fix\nThat test passes after the fix\nAll existing tests pass', verifyCmd:'npm test', scope:'Files directly involved in the bug', mustNotChange:'No refactoring or reformatting unrelated to the bug\nExisting tests may not be deleted or loosened', context:'' },
-          feature: { goal:'Add a feature: (one sentence on what the user can do)', doneWhen:'The feature has tests and they pass\nAll existing tests pass\nThe build succeeds', verifyCmd:'npm test && npm run build', scope:'Files the feature needs', mustNotChange:'Behavior of existing features\nPublic API\nNo new dependencies without asking me', context:'' },
-          refactor: { goal:'Refactor: (module and reason), with no change in external behavior', doneWhen:'The same test suite passes before and after\nType check and lint are clean', verifyCmd:'npm test && npm run lint', scope:'The named module', mustNotChange:'Any external behavior or output\nTests (add only; never change existing assertions)', context:'' },
-          ui: { goal:'Redesign the UI and UX of: (page name)', doneWhen:'The build succeeds\nNo console errors on page load\nNo horizontal scroll at 390px and 1440px\nBefore/after screenshots saved for comparison', verifyCmd:'npm run build && npm test', scope:'Components and styles of that page', mustNotChange:'Data format and storage\nOther pages\nURL structure', context:'' },
-          research: { goal:'Research and summarize: (topic), with sourced conclusions', doneWhen:'Every key point links to a source that opens\nVerified facts are separated from inference\nThe conclusion answers the original question', verifyCmd:'', scope:'Only write the report file; change nothing else', mustNotChange:'No invented data or sources', context:'' }
+          bugfix: { goal:'Fix this bug: (symptom and steps to reproduce)', projectRules:'No refactoring or reformatting unrelated to the bug\nExisting tests may not be deleted or loosened', scope:'Files directly involved in the bug', steps:'Write a test reproducing the bug | test fails first\nFind the cause and fix it | new test passes\nRegression check | all existing tests pass', verifyCmd:'npm test', doneWhen:'', delivery:'commit' },
+          feature: { goal:'Add a feature: (one sentence on what the user can do)', projectRules:'Existing behavior unchanged\nPublic API unchanged', scope:'Files the feature needs', steps:'Write tests for the feature | tests fail first\nImplement it | new tests pass\nIntegrate and build | tests and build pass', verifyCmd:'npm test && npm run build', doneWhen:'', delivery:'commit' },
+          refactor: { goal:'Refactor: (module and reason), with no change in external behavior', projectRules:'No change to external behavior or output\nExisting test assertions may not change (add only)', scope:'The named module', steps:'Record test results before refactoring | all tests pass\nRefactor in small steps | tests still pass after each step\nClean up | lint and type check are clean', verifyCmd:'npm test && npm run lint', doneWhen:'', delivery:'commit' },
+          ui: { goal:'Redesign the UI and UX of: (page name)', projectRules:'Data format and storage unchanged\nOther pages untouched\nURL structure unchanged', scope:'Components and styles of that page', steps:'Capture before screenshots on desktop and mobile | screenshots saved\nRedesign the UI | build succeeds\nCheck layout | no horizontal scroll at 390px and 1440px, no console errors', verifyCmd:'npm run build && npm test', doneWhen:'Before/after screenshots saved for comparison', delivery:'commit' },
+          research: { goal:'Research and summarize: (topic), with sourced conclusions', projectRules:'No invented data or sources', scope:'Only write the report file; change nothing else', steps:'List the questions to answer | list confirmed by me\nGather sources | every key point has a source that opens\nWrite conclusions | each question is answered', verifyCmd:'', doneWhen:'Verified facts are separated from inference', delivery:'report' }
         }
       };
       const exampleData = {
-        zh: { goal:'修好手機版登入頁「送出」按鈕被鍵盤遮住的問題。', doneWhen:'新增一個 390px 寬度的測試，確認鍵盤開啟時按鈕完整可見\n這個測試通過\n既有測試全部通過\n頁面載入時主控台沒有錯誤', verifyCmd:'npm test && npm run build', scope:'src/pages/login/ 與它的測試', mustNotChange:'登入流程與 API\n其他頁面的樣式\n不新增套件', context:'只在 iOS Safari 出現；桌面版正常。相關檔案：src/pages/login/LoginForm.tsx。', notesFile:'PROGRESS.md', maxTurns:'15', checker:'subagent' },
-        en: { goal:'Fix the mobile login page where the keyboard hides the Submit button.', doneWhen:'Add a 390px-wide test confirming the button is fully visible with the keyboard open\nThat test passes\nAll existing tests pass\nNo console errors on page load', verifyCmd:'npm test && npm run build', scope:'src/pages/login/ and its tests', mustNotChange:'Login flow and API\nStyles of other pages\nNo new dependencies', context:'Only on iOS Safari; desktop is fine. Relevant file: src/pages/login/LoginForm.tsx.', notesFile:'PROGRESS.md', maxTurns:'15', checker:'subagent' }
+        zh: { goal:'修好手機版登入頁「送出」按鈕被鍵盤遮住的問題。', projectRules:'登入流程與 API 不可改\n其他頁面的樣式不動\n不新增套件', context:'只在 iOS Safari 出現；桌面版正常。相關檔案：src/pages/login/LoginForm.tsx。', scope:'src/pages/login/ 與它的測試', steps:'寫一個 390px 寬、鍵盤開啟的測試 | 測試先失敗\n修正版面 | 測試通過\n回歸檢查 | npm test 全部通過', maxTurns:'15', notesFile:'PROGRESS.md', verifyCmd:'npm test && npm run build', doneWhen:'頁面載入時主控台沒有錯誤', checker:'subagent', delivery:'commit' },
+        en: { goal:'Fix the mobile login page where the keyboard hides the Submit button.', projectRules:'Login flow and API unchanged\nStyles of other pages untouched\nNo new dependencies', context:'Only on iOS Safari; desktop is fine. Relevant file: src/pages/login/LoginForm.tsx.', scope:'src/pages/login/ and its tests', steps:'Write a 390px-wide test with the keyboard open | test fails first\nFix the layout | test passes\nRegression check | npm test passes', maxTurns:'15', notesFile:'PROGRESS.md', verifyCmd:'npm test && npm run build', doneWhen:'No console errors on page load', checker:'subagent', delivery:'commit' }
       };
       let currentLang = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
       let mode = 'full';
@@ -420,48 +488,65 @@ tests/login.spec.ts 全部通過
       const value = (id) => $(id).type === 'checkbox' ? $(id).checked : $(id).value.trim();
       const lines = (s) => s.split('\n').map(x => x.trim().replace(/^[-*•]\s*|^\d+[.)]\s*/, '')).filter(Boolean);
       const turns = () => { const n = parseInt($('maxTurns').value, 10); return n >= 1 && n <= 200 ? n : 20; };
-      const hasContent = () => ['goal','doneWhen','verifyCmd','scope','mustNotChange','context'].some(id => value(id));
+      const hasContent = () => ['goal','projectRules','context','scope','steps','verifyCmd','doneWhen','otherApprovals'].some(id => value(id));
       const needsConfirm = () => hasContent() && !pristineSource;
-      const escapeHeadings = (text) => text.replace(/^(\s*)#/gm, '$1\\#');
-      const section = (title, body) => body ? `## ${title}\n${body}\n\n` : '';
+      const esc = (text) => text.replace(/^(\s*)#/gm, '$1\\#');
+      const bullets = (arr) => arr.map(x => `- ${esc(x)}`).join('\n');
+      const approvals = () => [...askFields.filter(id => value(id)).map(id => t(id)), ...(value('otherApprovals') ? [value('otherApprovals')] : [])];
 
       function buildFull() {
         const v = Object.fromEntries(fields.map(id => [id, value(id)]));
         if (!v.goal) return '';
-        ['goal','scope','context'].forEach(id => { v[id] = escapeHeadings(v[id]); });
         const zh = currentLang === 'zh';
-        const H = zh
-          ? { goal:'目標', done:'完成條件（全部通過才算完成）', scope:'範圍', context:'背景與資料', loop:'工作迴圈', notes:'進度筆記', check:'獨立檢查', rules:'家規', report:'回報格式' }
-          : { goal:'GOAL', done:'DONE WHEN (all must pass)', scope:'SCOPE', context:'BACKGROUND & DATA', loop:'WORK LOOP', notes:'PROGRESS NOTES', check:'INDEPENDENT CHECK', rules:'HOUSE RULES', report:'REPORT FORMAT' };
-        const out = [section(H.goal, v.goal)];
-        const done = lines(v.doneWhen).map(x => `- ${escapeHeadings(x)}`);
-        if (v.verifyCmd) done.push(zh ? `- 驗證指令 \`${v.verifyCmd}\` 必須以結束碼 0 結束` : `- The verify command \`${v.verifyCmd}\` exits with code 0`);
-        if (!done.length) done.push(zh ? '- 尚未定義。開始動手前，先提出可用程式檢查的完成條件，等我確認。' : '- Not defined yet. Before changing anything, propose machine-checkable done conditions and wait for my confirmation.');
-        out.push(section(H.done, done.join('\n')));
-        const scope = [];
-        if (v.scope) scope.push(zh ? `可以修改：${v.scope}` : `May change: ${v.scope}`);
-        const keep = lines(v.mustNotChange);
-        if (keep.length) scope.push((zh ? '不可改動：\n' : 'Must not change:\n') + keep.map(x => `- ${escapeHeadings(x)}`).join('\n'));
-        out.push(section(H.scope, scope.join('\n')));
-        out.push(section(H.context, v.context));
-        const n = turns();
-        out.push(section(H.loop, zh
-          ? `每一回合依序：\n1. 收集：只讀與目標相關的檔案和資料，需要時才擴大範圍。\n2. 行動：做一個最小、可驗證的改動。\n3. 驗證：執行完成條件中的檢查，記下實際輸出。\n- 檢查全部通過就停止，不加做額外工作。\n- 最多 ${n} 回合。同一項檢查連續失敗 2 次就換方法；仍然失敗就停下來，回報卡住的原因和證據。`
-          : `Each turn, in order:\n1. Gather: read only files and data relevant to the goal; widen only when needed.\n2. Act: make one small, verifiable change.\n3. Verify: run the done-condition checks and record the actual output.\n- Stop as soon as every check passes; do no extra work.\n- At most ${n} turns. If the same check fails twice in a row, change approach; if it still fails, stop and report why, with evidence.`));
-        if (v.notesFile) out.push(section(H.notes, zh
-          ? `把進度寫在 \`${v.notesFile}\`：已完成、目前狀態、下一步、未解決問題。每回合結束時更新；對話壓縮或中斷後，先讀它再繼續。`
-          : `Keep progress in \`${v.notesFile}\`: done, current state, next step, open questions. Update it at the end of every turn; after compaction or interruption, read it before continuing.`));
-        const checkerText = {
-          zh: { subagent:'自己的檢查通過後，不要直接宣布完成。另開一個子代理擔任檢查者：它只讀不改，逐項重跑完成條件，回報每項 PASS/FAIL 和證據。任何一項 FAIL 就回到迴圈。', fresh:'自己的檢查通過後，不要直接宣布完成。列出完成條件和驗證指令，交給全新對話中的檢查者重跑；它只讀不改，任何一項 FAIL 就回到迴圈。', human:'自己的檢查通過後，列出每項完成條件的實際檢查輸出，由我親自驗收。我確認之前，不要宣布完成。' },
-          en: { subagent:'When your own checks pass, do not declare done. Start a separate read-only subagent as the checker: it re-runs every done condition and reports PASS/FAIL with evidence. Any FAIL sends you back into the loop.', fresh:'When your own checks pass, do not declare done. List the done conditions and verify command for a checker in a fresh session to re-run, read-only. Any FAIL sends you back into the loop.', human:'When your own checks pass, show the actual output of every done-condition check for me to verify. Do not declare done until I confirm.' }
+        const L = zh ? {
+          title:'# Loop Spec', p1:'## 一、規則與上下文', p2:'## 二、多步驗證迴圈', p3:'## 三、自動化測試與交付', p4:'## 四、人類設計，AI 執行',
+          goal:'**目標**', rules:'**規則**', proj:'**專案規則／不可改動**', ctx:'**上下文**', scope:'**可以修改**', steps:'**步驟**（每一步：收集 → 行動 → 驗證；該步檢查通過才進下一步）',
+          check:'檢查', noCheck:'先說明你會怎麼檢查', noSteps:'先把工作拆成 2–5 步，每步附一個檢查，列出來後再開始。', loop:'**迴圈**',
+          done:'**完成條件**（全部通過才算完成）', checker:'**獨立檢查**', delivery:'**交付**', report:'**回報格式**', ask:'**需要我批准才能做**', auto:'**AI 自主範圍**', esc:'**何時停下來問我**'
+        } : {
+          title:'# LOOP SPEC', p1:'## 1. RULES & CONTEXT', p2:'## 2. MULTI-STEP VERIFICATION LOOP', p3:'## 3. AUTOMATED TESTING & DELIVERY', p4:'## 4. HUMANS DESIGN, AI EXECUTES',
+          goal:'**Goal**', rules:'**Rules**', proj:'**Project rules / must not change**', ctx:'**Context**', scope:'**May change**', steps:'**Steps** (each: gather → act → verify; move on only when that step’s check passes)',
+          check:'check', noCheck:'state how you will check it first', noSteps:'First split the work into 2–5 steps, each with a check, list them, then start.', loop:'**Loop**',
+          done:'**Done when** (all must pass)', checker:'**Independent check**', delivery:'**Delivery**', report:'**Report format**', ask:'**Needs my approval first**', auto:'**AI autonomy**', esc:'**When to stop and ask me**'
         };
-        out.push(section(H.check, checkerText[currentLang][v.checker]));
-        const rules = checkFields.filter(id => v[id]).map(id => `- ${t(id)}`);
-        if (rules.length) out.push(section(H.rules, rules.join('\n')));
-        out.push(section(H.report, zh
-          ? '完成後只回報：改了哪些檔案、每項完成條件的 PASS/FAIL 和證據、還剩下的風險或待決事項。'
-          : 'When done, report only: files changed, PASS/FAIL with evidence for each done condition, and remaining risks or open decisions.'));
-        return out.join('').trim();
+        const out = [L.title, '', L.p1, `${L.goal}\n${esc(v.goal)}`];
+        const rules = ruleFields.filter(id => v[id]).map(id => t(id));
+        if (rules.length) out.push(`${L.rules}\n${bullets(rules)}`);
+        const proj = lines(v.projectRules); if (proj.length) out.push(`${L.proj}\n${bullets(proj)}`);
+        if (v.context) out.push(`${L.ctx}\n${esc(v.context)}`);
+        if (v.scope) out.push(`${L.scope}\n${esc(v.scope)}`);
+        out.push('', L.p2);
+        const steps = lines(v.steps).map((s, i) => { const [a, ...b] = s.split('|'); const c = b.join('|').trim(); return `${i + 1}. ${esc(a.trim())} — ${L.check}: ${c ? esc(c) : L.noCheck}`; });
+        out.push(`${L.steps}\n${steps.length ? steps.join('\n') : L.noSteps}`);
+        const loop = zh
+          ? [`最多 ${turns()} 回合；全部檢查通過就停止，不加做額外工作。`, '同一項檢查連續失敗 2 次就換方法；仍然失敗就停下來，回報卡住的原因和證據。']
+          : [`At most ${turns()} turns; stop as soon as every check passes and do no extra work.`, 'If the same check fails twice in a row, change approach; if it still fails, stop and report why, with evidence.'];
+        if (v.notesFile) loop.push(zh ? `進度寫在 \`${v.notesFile}\`（已完成、目前狀態、下一步、未解決問題），每步結束時更新；中斷或壓縮後先讀它再繼續。` : `Keep progress in \`${v.notesFile}\` (done, current state, next step, open questions); update after every step and read it first after an interruption or compaction.`);
+        out.push(`${L.loop}\n${loop.map(x => `- ${x}`).join('\n')}`);
+        out.push('', L.p3);
+        const done = lines(v.doneWhen).map(esc);
+        if (v.verifyCmd) done.unshift(zh ? `\`${v.verifyCmd}\` 結束碼為 0` : `\`${v.verifyCmd}\` exits with code 0`);
+        if (!done.length) done.push(zh ? '尚未定義。開始前先提出可用程式檢查的完成條件，等我確認。' : 'Not defined yet. Before starting, propose machine-checkable done conditions and wait for my confirmation.');
+        out.push(`${L.done}\n${done.map(x => `- ${x}`).join('\n')}`);
+        const checkerText = {
+          zh: { subagent:'自己的檢查通過後不要直接宣布完成。另開一個只讀不改的子代理，逐項重跑完成條件，回報每項 PASS/FAIL 和證據；任何一項 FAIL 就回到迴圈。', fresh:'自己的檢查通過後不要直接宣布完成。列出完成條件和驗證指令，交給全新對話中的檢查者只讀重跑；任何一項 FAIL 就回到迴圈。', human:'自己的檢查通過後，列出每項完成條件的實際輸出，由我親自驗收；我確認前不要宣布完成。' },
+          en: { subagent:'When your own checks pass, do not declare done. Start a separate read-only subagent that re-runs every done condition and reports PASS/FAIL with evidence; any FAIL sends you back into the loop.', fresh:'When your own checks pass, do not declare done. List the done conditions and verify command for a checker in a fresh session to re-run read-only; any FAIL sends you back into the loop.', human:'When your own checks pass, show the actual output of every done-condition check for me to verify; do not declare done until I confirm.' }
+        };
+        out.push(`${L.checker}\n${checkerText[currentLang][v.checker]}`);
+        const deliveryText = {
+          zh: { commit:'在本機分支上 commit，不推送、不部署。', pr:'推到新分支並開 PR，不合併、不部署。', files:'交付修改後的檔案，不 commit、不推送。', report:'只交一份報告，不修改任何檔案。' },
+          en: { commit:'Commit on a local branch; do not push or deploy.', pr:'Push a new branch and open a PR; do not merge or deploy.', files:'Deliver the changed files; do not commit or push.', report:'Deliver a report only; change no files.' }
+        };
+        out.push(`${L.delivery}\n- ${deliveryText[currentLang][v.delivery]}\n- ${zh ? '交付前所有完成條件和獨立檢查都必須通過；沒通過就不交付。' : 'Every done condition and the independent check must pass before delivery; otherwise do not deliver.'}`);
+        out.push(`${L.report}\n${zh ? '只回報：改了哪些檔案、每項檢查的 PASS/FAIL 和證據、交付物在哪裡、剩下的風險或待決事項。' : 'Report only: files changed, PASS/FAIL with evidence for each check, where the deliverable is, and remaining risks or open decisions.'}`);
+        out.push('', L.p4);
+        const ask = approvals();
+        if (ask.length) out.push(`${L.ask}\n${bullets(ask)}`);
+        out.push(`${L.auto}\n${zh ? '在本規格內自行決定做法，不必每一步都問我。' : 'Inside this spec, decide how to do the work yourself; do not ask me at every step.'}`);
+        out.push(`${L.esc}\n${zh
+          ? '- 假設不明確，或需求互相矛盾\n- 需要擴大範圍，或要動到「不可改動」的項目\n- 失敗處理用完仍然沒有通過\n- 下一步屬於「需要我批准」的事'
+          : '- An assumption is unclear or requirements conflict\n- The scope must grow, or something under “must not change” would be touched\n- The failure policy is exhausted and checks still fail\n- The next step is on the “needs my approval” list'}`);
+        return out.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
       }
       function buildGoal() {
         const goal = value('goal').replace(/\s+/g, ' ');
@@ -469,19 +554,21 @@ tests/login.spec.ts 全部通過
         const cmd = value('verifyCmd');
         if (!goal || (!done.length && !cmd)) return '';
         const zh = currentLang === 'zh';
-        const parts = [...done];
-        if (cmd) parts.push(zh ? `\`${cmd}\` 結束碼為 0` : `\`${cmd}\` exits 0`);
-        const keep = lines(value('mustNotChange'));
+        const parts = [...(cmd ? [zh ? `\`${cmd}\` 結束碼為 0` : `\`${cmd}\` exits 0`] : []), ...done];
+        const keep = lines(value('projectRules'));
+        const ask = approvals();
         let s = zh ? `/goal ${goal}——完成條件：${parts.join('；')}` : `/goal ${goal} — done when: ${parts.join('; ')}`;
-        if (keep.length) s += zh ? `；不可改動：${keep.join("、")}` : `; and nothing changed in: ${keep.join(', ')}`;
-        s += zh ? `；最多 ${turns()} 回合。` : `; at most ${turns()} turns.`;
-        return s;
+        if (keep.length) s += zh ? `；不可改動：${keep.join('、')}` : `; must not change: ${keep.join(', ')}`;
+        s += zh ? `；最多 ${turns()} 回合` : `; at most ${turns()} turns`;
+        if (ask.length) s += zh ? `；以下先問我：${ask.join(" / ")}` : `; ask me before: ${ask.join(', ')}`;
+        return s + (zh ? '。' : '.');
       }
       const currentOutput = () => mode === 'goal' ? buildGoal() : buildFull();
       function updatePreview() {
         const prompt = currentOutput();
-        const filled = [value('goal'), value('doneWhen') || value('verifyCmd'), value('scope') || value('mustNotChange'), value('context'), value('notesFile')].filter(Boolean).length;
-        const score = Math.round(filled / 5 * 100);
+        const pillars = [value('goal') && (value('context') || value('projectRules') || value('scope')), value('steps'), value('verifyCmd') || value('doneWhen'), approvals().length > 0];
+        const filled = pillars.filter(Boolean).length;
+        const score = Math.round(filled / 4 * 100);
         $('score').textContent = `${score}%`;
         $('progressBar').style.width = `${score}%`;
         $('progressText').textContent = t('progress').replace('{n}', filled);
@@ -519,19 +606,24 @@ tests/login.spec.ts 全部通過
       function fill(data) {
         textFields.forEach(id => { if (typeof data[id] === 'string') $(id).value = data[id]; });
         if (typeof data.maxTurns === 'string' || typeof data.maxTurns === 'number') $('maxTurns').value = data.maxTurns;
-        if ([...$('checker').options].some(o => o.value === data.checker)) $('checker').value = data.checker;
+        selectFields.forEach(id => { if ([...$(id).options].some(o => o.value === data[id])) $(id).value = data[id]; });
         checkFields.forEach(id => { if (typeof data[id] === 'boolean') $(id).checked = data[id]; });
       }
-      // Restore the draft; if only an old (v1, fields 01–08) draft exists, map it into the loop fields once.
+      // Restore the v2 draft; otherwise import an older draft once (loop v1, then the original 01–08 form).
       function restoreDraft() {
         const read = (k) => { try { const d = JSON.parse(localStorage.getItem(k) || 'null'); return d && typeof d === 'object' ? d : null; } catch (_) { return null; } };
         const data = read(storageKey);
         if (data) { fill(data); return false; }
+        const str = (o, k) => typeof o[k] === 'string' ? o[k].trim() : '';
+        const v1 = read(loopV1Key);
+        if (v1 && str(v1, 'goal')) {
+          fill({ ...v1, projectRules: str(v1, 'mustNotChange') });
+          return true;
+        }
         const old = read(legacyKey);
-        if (!old || typeof old.goal !== 'string' || !old.goal.trim()) return false;
-        const str = (k) => typeof old[k] === 'string' ? old[k].trim() : '';
-        fill({ goal: str('goal'), doneWhen: str('criteria'), mustNotChange: str('constraints'),
-               context: [str('role'), str('context'), str('steps'), str('examples')].filter(Boolean).join('\n\n') });
+        if (!old || !str(old, 'goal')) return false;
+        fill({ goal: str(old, 'goal'), doneWhen: str(old, 'criteria'), projectRules: str(old, 'constraints'), steps: str(old, 'steps'),
+               context: [str(old, 'role'), str(old, 'context'), str(old, 'examples')].filter(Boolean).join('\n\n') });
         return true;
       }
       function showToast(message) {
@@ -542,7 +634,7 @@ tests/login.spec.ts 全部通過
       function resetContentFields() {
         textFields.forEach(id => { $(id).value = $(id).defaultValue; });
         $('maxTurns').value = $('maxTurns').defaultValue;
-        $('checker').value = 'subagent';
+        selectFields.forEach(id => { $(id).value = $(id).options[0].value; });
       }
       function applySource(source) {
         resetContentFields();
@@ -567,7 +659,7 @@ tests/login.spec.ts 全部通過
       }
       function requireOutput() {
         const out = currentOutput();
-        if (!out) { showToast(!value('goal') ? t('needGoal') : t('needDone')); $(!value('goal') ? 'goal' : 'doneWhen').focus(); }
+        if (!out) { showToast(!value('goal') ? t('needGoal') : t('needDone')); $(!value('goal') ? 'goal' : 'verifyCmd').focus(); }
         return out;
       }
       const onUserEdit = (e) => { if (e.target.type !== 'checkbox') pristineSource = null; updatePreview(); };
@@ -594,7 +686,7 @@ tests/login.spec.ts 全部通過
         const prompt = requireOutput(); if (!prompt) return;
         const blob = new Blob([prompt], { type:'text/markdown;charset=utf-8' });
         const url = URL.createObjectURL(blob); const a = document.createElement('a');
-        a.href = url; a.download = mode === 'goal' ? 'goal-command.md' : 'loop-prompt.md'; document.body.appendChild(a); a.click(); a.remove();
+        a.href = url; a.download = mode === 'goal' ? 'goal-command.md' : 'loop-spec.md'; document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
         showToast(t('downloaded'));
       });
