@@ -56,7 +56,8 @@ function serve() {
   let p = await open();
   check('structure: four pillars in the form', (await p.$$eval('.pillar-title', els => els.map(e => e.textContent))).join('|') === '定義規則與上下文|多步驗證迴圈|自動化測試與交付|人類設計，AI 執行');
   check('structure: past vs now comparison', (await p.textContent('.compare')).includes('找最佳 Prompt') && (await p.textContent('.compare')).includes('人類設計，AI 執行'));
-  check('empty: preview shows empty state', (await preview(p)).includes('先寫下目標'));
+  check('copy: plain headline + /goal explained', (await p.textContent('h1')).includes('AI 照著做到完') && (await p.textContent('[data-i18n=goalNote]')).includes('Claude Code 的指令'));
+  check('empty: preview shows empty state', (await preview(p)).includes('任務單就會出現在這裡'));
 
   // ---------- Loop spec (zh) ----------
   await p.click('#exampleBtn'); t = await preview(p);
@@ -67,7 +68,7 @@ function serve() {
   check('notes: notes file named', t.includes('`PROGRESS.md`'));
   check('verify: command must exit 0', t.includes('`npm test && npm run build` 結束碼為 0'));
   check('delivery: local commit + must pass first', t.includes('在本機分支上 commit，不推送、不部署。') && t.includes('沒通過就不交付'));
-  check('human: default approvals listed', ['部署／上線、推送到 main', '刪除檔案、資料或分支', '花錢、購買、付費 API', '對外發送（Email、訊息、貼文）'].every(x => t.includes(x)) && !t.includes('安裝新套件或工具'));
+  check('human: default approvals listed', ['讓網站上線、正式發布（部署、推送到 main）', '刪除檔案、資料或分支', '花錢、購買、付費服務', '寄信、發訊息、發文'].every(x => t.includes(x)) && !t.includes('安裝新軟體或套件'));
   check('human: escalation rules', t.includes('何時停下來問我'));
   check('score: example is 100%', await p.textContent('#score') === '100%');
   await p.uncheck('#ruleSimple'); t = await preview(p);
@@ -75,7 +76,7 @@ function serve() {
   await p.check('#ruleSimple');
   await p.check('#askInstall'); await p.fill('#otherApprovals', '改資料庫');
   t = await preview(p);
-  check('human: extra approvals', t.includes('安裝新套件或工具') && t.includes('- 改資料庫'));
+  check('human: extra approvals', t.includes('安裝新軟體或套件') && t.includes('- 改資料庫'));
   await p.selectOption('#delivery', 'pr'); await p.selectOption('#checker', 'human'); t = await preview(p);
   check('delivery/checker options change text', t.includes('開 PR，不合併') && t.includes('由我親自驗收'));
   await p.fill('#steps', '只有步驟');
@@ -87,9 +88,9 @@ function serve() {
   await p.fill('#doneWhen', ''); await p.fill('#verifyCmd', '');
   check('done: missing condition asks to propose one', (await preview(p)).includes('先提出可用程式檢查的完成條件'));
   await p.click('[data-mode=goal]');
-  check('goal mode: needs a done condition', (await preview(p)).includes('/goal 需要'));
+  check('goal mode: needs a done condition', (await preview(p)).includes('一行版需要'));
   await p.fill('#verifyCmd', 'npm test'); t = await preview(p);
-  check('goal mode: one-line /goal command', t.startsWith('/goal ') && !t.includes('\n') && t.includes('`npm test` 結束碼為 0') && t.includes('最多 15 回合') && t.includes('以下先問我：部署'));
+  check('goal mode: one-line /goal command', t.startsWith('/goal ') && !t.includes('\n') && t.includes('`npm test` 結束碼為 0') && t.includes('最多 15 回合') && t.includes('以下先問我：讓網站上線'));
   await p.click('#copyBtn');
   check('export: copy /goal', (await p.evaluate(() => navigator.clipboard.readText())).startsWith('/goal '));
   await p.click('[data-mode=full]'); await p.click('#copyBtn');
@@ -101,7 +102,7 @@ function serve() {
   await p.fill('#goal', '<img src=x onerror="window.__xss=1">');
   check('security: input rendered as text', await p.evaluate(() => !window.__xss && !document.querySelector('#preview img')));
   await p.fill('#goal', ''); await p.click('#copyBtn');
-  check('guard: empty goal blocks copy', (await p.textContent('#toast')).includes('先填寫「目標」'));
+  check('guard: empty goal blocks copy', (await p.textContent('#toast')).includes('請先填「要完成什麼？」'));
   check('no console errors (zh)', p.errs.length === 0, p.errs.join('|'));
   await p.context().close();
 
@@ -127,7 +128,7 @@ function serve() {
   await p.evaluate(() => { localStorage.clear(); localStorage.setItem('prompt-studio-loop-v1', JSON.stringify({ goal:'L1目標', doneWhen:'L1完成', verifyCmd:'npm test', mustNotChange:'L1不可改', maxTurns:'9', checker:'fresh', ruleSimple:false })); });
   await p.reload();
   check('import: loop v1 draft mapped', await p.inputValue('#goal') === 'L1目標' && await p.inputValue('#projectRules') === 'L1不可改' && await p.inputValue('#verifyCmd') === 'npm test' && await p.inputValue('#maxTurns') === '9' && await p.inputValue('#checker') === 'fresh' && !(await p.isChecked('#ruleSimple')));
-  check('import: toast shown', (await p.textContent('#toast')).includes('舊版草稿'));
+  check('import: toast shown', (await p.textContent('#toast')).includes('舊版填的內容'));
   await p.evaluate(() => { localStorage.clear(); localStorage.setItem('prompt-studio-v1', JSON.stringify({ goal:'舊目標', role:'舊角色', context:'舊背景', steps:'步驟A', examples:'', constraints:'不可改A', criteria:'通過B' })); });
   await p.reload();
   check('import: original 01–08 draft mapped', await p.inputValue('#goal') === '舊目標' && await p.inputValue('#doneWhen') === '通過B' && await p.inputValue('#projectRules') === '不可改A' && await p.inputValue('#steps') === '步驟A' && (await p.inputValue('#context')).includes('舊背景'));

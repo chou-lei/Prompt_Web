@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f5f2">
-  <meta name="description" content="用 Loop Engineering 設計 AI 工作規格：規則與上下文、多步驗證迴圈、自動化測試與交付、人類設計 AI 執行。">
-  <title>Prompt Studio — Loop 規格設計</title>
+  <meta name="description" content="填一張任務單，讓 AI 照規則做、自己檢查，全部過關才交給你。">
+  <title>Prompt Studio — AI 任務單</title>
   <link rel="icon" href="data:,">
   <style>
     :root {
@@ -200,10 +200,10 @@
   <header class="topbar">
     <a class="brand" href="#top" aria-label="Prompt Studio home">
       <span class="brand-mark">P.</span>
-      <span class="brand-name">PROMPT STUDIO <span class="brand-sub" data-i18n="brandSub">Loop 規格設計</span></span>
+      <span class="brand-name">PROMPT STUDIO <span class="brand-sub" data-i18n="brandSub">AI 任務單</span></span>
     </a>
     <div class="top-actions">
-      <button class="text-btn" id="resetBtn" data-i18n="reset">清空內容</button>
+      <button class="text-btn" id="resetBtn" data-i18n="reset">全部清空</button>
       <div class="lang-switch" aria-label="Interface language">
         <button type="button" data-lang="zh" class="active" aria-pressed="true" aria-label="繁體中文">中</button>
         <button type="button" data-lang="en" aria-pressed="false" aria-label="English">EN</button>
@@ -215,124 +215,124 @@
     <section class="hero">
       <div>
         <div class="eyebrow" data-i18n="eyebrow">LOOP ENGINEERING / 03</div>
-        <h1 data-i18n="headline">人類設計迴圈，<br>AI 負責執行。</h1>
-        <p class="hero-copy" data-i18n="subhead">不再追求一段「最佳 Prompt」。在這裡設計一份迴圈規格：規則與上下文、每一步怎麼驗證、怎樣才能交付、哪些事要先問你。AI 照著規格反覆執行與驗證，直到全部通過。</p>
+        <h1 data-i18n="headline">你訂規則，<br>AI 照著做到完。</h1>
+        <p class="hero-copy" data-i18n="subhead">不用再煩惱「怎麼問 AI 最好」。把這張任務單填好：要做什麼、哪些不能碰、怎樣才算做完、哪些事要先問你。AI 會一步一步做、一步一步檢查，全部過關才交給你。</p>
       </div>
-      <div class="hero-note"><span data-i18n="heroNote1">你定規則與檢查</span><br><span data-i18n="heroNote2">AI 在規則內自己跑完</span></div>
+      <div class="hero-note"><span data-i18n="heroNote1">你負責訂規則</span><br><span data-i18n="heroNote2">AI 負責做和檢查</span></div>
     </section>
 
     <section class="compare" aria-label="Past vs now">
       <div class="compare-card past">
-        <h2 data-i18n="pastTitle">過去：對話式開發</h2>
+        <h2 data-i18n="pastTitle">以前：跟 AI 一問一答</h2>
         <ol><li data-i18n="past1">找最佳 Prompt</li><li data-i18n="past2">單次對話</li><li data-i18n="past3">人工檢查與整合</li><li data-i18n="past4">AI 主導流程</li></ol>
       </div>
       <div class="compare-card">
-        <h2 data-i18n="nowTitle">現在：Loop Engineering</h2>
+        <h2 data-i18n="nowTitle">現在：Loop Engineering（先訂規則，AI 自己做到完）</h2>
         <ol><li data-i18n="now1">定義規則與上下文</li><li data-i18n="now2">多步驗證迴圈</li><li data-i18n="now3">自動化測試與交付</li><li data-i18n="now4">人類設計，AI 執行</li></ol>
       </div>
     </section>
 
     <section class="preset-wrap" aria-label="Task presets">
-      <span class="preset-label" data-i18n="presetLabel">快速開始</span>
-      <button class="preset" data-preset="bugfix" data-i18n="presetBugfix">修 Bug</button>
+      <span class="preset-label" data-i18n="presetLabel">選一個範本開始</span>
+      <button class="preset" data-preset="bugfix" data-i18n="presetBugfix">修問題（Bug）</button>
       <button class="preset" data-preset="feature" data-i18n="presetFeature">新功能</button>
-      <button class="preset" data-preset="refactor" data-i18n="presetRefactor">重構</button>
-      <button class="preset" data-preset="ui" data-i18n="presetUi">網站／介面改版</button>
-      <button class="preset" data-preset="research" data-i18n="presetResearch">研究整理</button>
-      <button class="preset" data-preset="blank" data-i18n="presetBlank">從空白開始</button>
+      <button class="preset" data-preset="refactor" data-i18n="presetRefactor">整理程式（重構）</button>
+      <button class="preset" data-preset="ui" data-i18n="presetUi">改網站外觀</button>
+      <button class="preset" data-preset="research" data-i18n="presetResearch">查資料</button>
+      <button class="preset" data-preset="blank" data-i18n="presetBlank">全部自己填</button>
     </section>
 
     <div class="workspace">
       <section class="form-panel" aria-label="Loop spec form">
         <div class="panel-head">
-          <div class="panel-title" data-i18n="formTitle">迴圈規格</div>
+          <div class="panel-title" data-i18n="formTitle">任務單</div>
           <div class="panel-kicker" data-i18n="formKicker">LOOP SPEC</div>
         </div>
         <form id="promptForm" class="form-body" autocomplete="off">
 
           <section class="pillar" id="pillar1">
             <div class="pillar-head"><span class="pillar-num">一</span><span class="pillar-title" data-i18n="p1">定義規則與上下文</span></div>
-            <p class="pillar-hint" data-i18n="p1hint">先把目標、規則、資料和範圍定清楚，AI 才不用猜。</p>
+            <p class="pillar-hint" data-i18n="p1hint">先說清楚：要做什麼、有什麼規矩、AI 需要知道什麼。說清楚了，AI 就不用亂猜。</p>
             <section class="section">
-              <div class="section-head"><span class="section-title" data-i18n="goalLabel">目標</span></div>
-              <textarea id="goal" class="short" data-i18n-placeholder="goalPh" placeholder="例如：修好手機版登入頁「送出」按鈕被鍵盤遮住的問題。"></textarea>
+              <div class="section-head"><span class="section-title" data-i18n="goalLabel">要完成什麼？</span></div>
+              <textarea id="goal" class="short" data-i18n-placeholder="goalPh" placeholder="用一句話說，例如：手機上的「送出」按鈕被鍵盤擋住了，把它修好。"></textarea>
             </section>
             <section class="section">
-              <div class="section-head"><span class="section-title" data-i18n="rulesLabel">規則</span></div>
+              <div class="section-head"><span class="section-title" data-i18n="rulesLabel">規矩</span></div>
               <div class="check-grid">
                 <label class="check-item"><input type="checkbox" id="ruleAssume" checked><span class="rule-text" data-i18n="ruleAssume">先講清楚假設：不確定先問，不要自己猜</span></label>
                 <label class="check-item"><input type="checkbox" id="ruleSimple" checked><span class="rule-text" data-i18n="ruleSimple">不要過度工程化：能簡單解決就不要加戲(除非必要結構)</span></label>
                 <label class="check-item"><input type="checkbox" id="ruleScope" checked><span class="rule-text" data-i18n="ruleScope">不碰無關範圍：修Bug就修Bug，不要順手重構全世界</span></label>
                 <label class="check-item"><input type="checkbox" id="ruleVerify" checked><span class="rule-text" data-i18n="ruleVerify">做完必須驗證：跑測試、看結果確認真的可以用</span></label>
               </div>
-              <label class="field-label" for="projectRules" data-i18n="projectRulesLabel" style="margin-top:12px">專案規則／不可改動（每行一條）</label>
+              <label class="field-label" for="projectRules" data-i18n="projectRulesLabel" style="margin-top:12px">絕對不能動的東西（一行寫一條）</label>
               <textarea id="projectRules" class="short" data-i18n-placeholder="projectRulesPh" placeholder="例如：
-公開 API 與資料庫結構不可改
-既有測試不可刪除或放寬
-不新增套件"></textarea>
+登入方式不能改
+原本的測試不能刪
+不要安裝新東西"></textarea>
             </section>
             <section class="section">
-              <div class="section-head"><span class="section-title" data-i18n="contextLabel">上下文</span><span class="optional" data-i18n="optional">選填</span></div>
-              <textarea id="context" class="short" data-i18n-placeholder="contextPh" placeholder="相關檔案、專案地圖、背景、錯誤訊息、連結。只放 AI 需要的。"></textarea>
-              <label class="field-label" for="scope" data-i18n="scopeLabel" style="margin-top:12px">可以修改的範圍</label>
-              <input type="text" id="scope" data-i18n-placeholder="scopePh" placeholder="例如：src/pages/login/ 與它的測試">
+              <div class="section-head"><span class="section-title" data-i18n="contextLabel">AI 需要知道的背景</span><span class="optional" data-i18n="optional">選填</span></div>
+              <textarea id="context" class="short" data-i18n-placeholder="contextPh" placeholder="例如：只有 iPhone 會出問題；相關檔案是 LoginForm.tsx；錯誤畫面長什麼樣子。"></textarea>
+              <label class="field-label" for="scope" data-i18n="scopeLabel" style="margin-top:12px">AI 可以改哪裡？</label>
+              <input type="text" id="scope" data-i18n-placeholder="scopePh" placeholder="例如：只改登入頁的檔案">
             </section>
           </section>
 
           <section class="pillar" id="pillar2">
             <div class="pillar-head"><span class="pillar-num">二</span><span class="pillar-title" data-i18n="p2">多步驗證迴圈</span></div>
-            <p class="pillar-hint" data-i18n="p2hint">把工作拆成步驟，每一步都有自己的檢查；通過才進下一步。</p>
+            <p class="pillar-hint" data-i18n="p2hint">把工作分成幾小步。每做完一步就檢查，過關了才做下一步。</p>
             <section class="section">
-              <div class="section-head"><span class="section-title" data-i18n="stepsLabel">步驟與檢查</span></div>
-              <p class="hint" style="margin-left:0" data-i18n="stepsHint">每行一步，用「|」隔開步驟和它的檢查。</p>
+              <div class="section-head"><span class="section-title" data-i18n="stepsLabel">分幾步做？每一步怎樣算過關？</span></div>
+              <p class="hint" style="margin-left:0" data-i18n="stepsHint">一行寫一步。「|」左邊寫要做什麼，右邊寫怎樣算過關。</p>
               <textarea id="steps" data-i18n-placeholder="stepsPh" placeholder="例如：
-寫一個重現 Bug 的測試 | 測試先失敗
-修正版面 | 測試通過
-全站回歸 | npm test 全部通過"></textarea>
+先把問題重現出來 | 看得到按鈕被擋住
+修好版面 | 按鈕不再被擋住
+全部再測一次 | 所有測試都通過"></textarea>
             </section>
             <section class="section">
               <div class="select-row">
                 <div>
-                  <label class="field-label" for="maxTurns" data-i18n="maxTurnsLabel">最多回合數</label>
+                  <label class="field-label" for="maxTurns" data-i18n="maxTurnsLabel">最多試幾輪？（避免一直做下去）</label>
                   <input type="number" id="maxTurns" min="1" max="200" value="20">
                 </div>
                 <div>
-                  <label class="field-label" for="notesFile" data-i18n="notesLabel">進度筆記檔（留空不使用）</label>
+                  <label class="field-label" for="notesFile" data-i18n="notesLabel">進度記錄檔（像工作日誌，留空就不用）</label>
                   <input type="text" id="notesFile" class="mono" value="PROGRESS.md" placeholder="PROGRESS.md">
                 </div>
               </div>
-              <div class="field-note" data-i18n="failNote">失敗處理固定為：同一項檢查連續失敗 2 次就換方法；仍然失敗就停下來回報原因和證據。</div>
+              <div class="field-note" data-i18n="failNote">卡住時怎麼辦：同一個檢查失敗 2 次，就換個方法；還是不行，就停下來告訴你原因。</div>
             </section>
           </section>
 
           <section class="pillar" id="pillar3">
             <div class="pillar-head"><span class="pillar-num">三</span><span class="pillar-title" data-i18n="p3">自動化測試與交付</span></div>
-            <p class="pillar-hint" data-i18n="p3hint">用程式判斷是否完成，由獨立檢查者確認後才交付。</p>
+            <p class="pillar-hint" data-i18n="p3hint">讓電腦自動檢查有沒有做好，再請另一位檢查者複查一次。全部過關，才交給你。</p>
             <section class="section">
-              <label class="field-label" for="verifyCmd" data-i18n="verifyLabel">驗證指令（結束碼 0 才算通過）</label>
-              <input type="text" id="verifyCmd" class="mono" data-i18n-placeholder="verifyPh" placeholder="例如：npm test && npm run build && npm run lint">
-              <label class="field-label" for="doneWhen" data-i18n="doneWhenLabel" style="margin-top:12px">其他完成條件（每行一條）</label>
+              <label class="field-label" for="verifyCmd" data-i18n="verifyLabel">自動檢查的指令（跑完沒出錯才算過關）</label>
+              <input type="text" id="verifyCmd" class="mono" data-i18n-placeholder="verifyPh" placeholder="例如：npm test（不知道可以留空，AI 會先提出來問你）">
+              <label class="field-label" for="doneWhen" data-i18n="doneWhenLabel" style="margin-top:12px">怎樣才算做完？（一行寫一條）</label>
               <textarea id="doneWhen" class="short" data-i18n-placeholder="doneWhenPh" placeholder="例如：
-390px 寬的畫面上按鈕完整可見
-主控台沒有錯誤"></textarea>
+手機畫面上按鈕完整看得到
+打開網頁沒有錯誤訊息"></textarea>
             </section>
             <section class="section">
               <div class="select-row">
                 <div>
-                  <label class="field-label" for="checker" data-i18n="checkerLabel">獨立檢查者</label>
+                  <label class="field-label" for="checker" data-i18n="checkerLabel">誰來複查？</label>
                   <select id="checker">
-                    <option value="subagent" data-i18n="checkerSubagent">另開子代理驗收（只讀不改）</option>
-                    <option value="fresh" data-i18n="checkerFresh">新對話重新驗收</option>
-                    <option value="human" data-i18n="checkerHuman">由我親自驗收</option>
+                    <option value="subagent" data-i18n="checkerSubagent">另一個 AI 複查（只看不改）</option>
+                    <option value="fresh" data-i18n="checkerFresh">開新對話重新檢查一次</option>
+                    <option value="human" data-i18n="checkerHuman">我自己檢查</option>
                   </select>
                 </div>
                 <div>
-                  <label class="field-label" for="delivery" data-i18n="deliveryLabel">交付物</label>
+                  <label class="field-label" for="delivery" data-i18n="deliveryLabel">做完要交出什麼？</label>
                   <select id="delivery">
-                    <option value="commit" data-i18n="deliveryCommit">本機 commit（不推送）</option>
-                    <option value="pr" data-i18n="deliveryPr">推到新分支並開 PR</option>
-                    <option value="files" data-i18n="deliveryFiles">修改後的檔案</option>
-                    <option value="report" data-i18n="deliveryReport">只交報告，不改檔</option>
+                    <option value="commit" data-i18n="deliveryCommit">先存在電腦裡，不上傳</option>
+                    <option value="pr" data-i18n="deliveryPr">上傳成待審版本（PR），等我同意</option>
+                    <option value="files" data-i18n="deliveryFiles">改好的檔案</option>
+                    <option value="report" data-i18n="deliveryReport">只寫報告，不改檔案</option>
                   </select>
                 </div>
               </div>
@@ -341,18 +341,18 @@
 
           <section class="pillar" id="pillar4">
             <div class="pillar-head"><span class="pillar-num">四</span><span class="pillar-title" data-i18n="p4">人類設計，AI 執行</span></div>
-            <p class="pillar-hint" data-i18n="p4hint">規格內 AI 自己決定怎麼做；以下事情必須先問你。</p>
+            <p class="pillar-hint" data-i18n="p4hint">任務單裡的事，AI 自己決定怎麼做；下面勾選的事，一定要先問你。</p>
             <section class="section">
-              <div class="section-head"><span class="section-title" data-i18n="approvalLabel">需要我批准</span></div>
+              <div class="section-head"><span class="section-title" data-i18n="approvalLabel">這些事要先問我</span></div>
               <div class="check-grid">
-                <label class="check-item"><input type="checkbox" id="askDeploy" checked><span data-i18n="askDeploy">部署／上線、推送到 main</span></label>
+                <label class="check-item"><input type="checkbox" id="askDeploy" checked><span data-i18n="askDeploy">讓網站上線、正式發布（部署、推送到 main）</span></label>
                 <label class="check-item"><input type="checkbox" id="askDelete" checked><span data-i18n="askDelete">刪除檔案、資料或分支</span></label>
-                <label class="check-item"><input type="checkbox" id="askSpend" checked><span data-i18n="askSpend">花錢、購買、付費 API</span></label>
-                <label class="check-item"><input type="checkbox" id="askSend" checked><span data-i18n="askSend">對外發送（Email、訊息、貼文）</span></label>
-                <label class="check-item"><input type="checkbox" id="askInstall"><span data-i18n="askInstall">安裝新套件或工具</span></label>
+                <label class="check-item"><input type="checkbox" id="askSpend" checked><span data-i18n="askSpend">花錢、購買、付費服務</span></label>
+                <label class="check-item"><input type="checkbox" id="askSend" checked><span data-i18n="askSend">寄信、發訊息、發文</span></label>
+                <label class="check-item"><input type="checkbox" id="askInstall"><span data-i18n="askInstall">安裝新軟體或套件</span></label>
               </div>
-              <label class="field-label" for="otherApprovals" data-i18n="otherApprovalsLabel" style="margin-top:12px">其他需要我批准的事</label>
-              <input type="text" id="otherApprovals" data-i18n-placeholder="otherApprovalsPh" placeholder="例如：改動資料庫結構">
+              <label class="field-label" for="otherApprovals" data-i18n="otherApprovalsLabel" style="margin-top:12px">還有什麼要先問我？</label>
+              <input type="text" id="otherApprovals" data-i18n-placeholder="otherApprovalsPh" placeholder="例如：改動資料庫">
             </section>
           </section>
         </form>
@@ -361,27 +361,28 @@
       <aside class="output-panel" aria-label="Generated loop spec preview">
         <div class="output-head">
           <div class="output-head-top">
-            <div class="output-title-wrap"><span class="live-dot"></span><span class="panel-title" data-i18n="outputTitle">規格預覽</span></div>
-            <div class="quality"><span data-i18n="completeness">完整度</span> <strong id="score">0%</strong></div>
+            <div class="output-title-wrap"><span class="live-dot"></span><span class="panel-title" data-i18n="outputTitle">任務單預覽</span></div>
+            <div class="quality"><span data-i18n="completeness">填寫進度</span> <strong id="score">0%</strong></div>
           </div>
           <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
           <div class="progress-meta"><span id="progressText"></span><span id="wordCount"></span></div>
         </div>
         <div class="output-controls">
           <div class="mode-switch" role="group" aria-label="Output mode">
-            <button type="button" data-mode="full" class="active" aria-pressed="true" data-i18n="modeFull">迴圈規格</button>
-            <button type="button" data-mode="goal" aria-pressed="false" data-i18n="modeGoal">/goal 指令</button>
+            <button type="button" data-mode="full" class="active" aria-pressed="true" data-i18n="modeFull">完整任務單</button>
+            <button type="button" data-mode="goal" aria-pressed="false" data-i18n="modeGoal">/goal 一行版</button>
           </div>
           <button class="control-btn primary" id="copyBtn" data-i18n="copy">複製</button>
-          <button class="control-btn" id="downloadBtn" data-i18n="download">下載 .md</button>
-          <button class="control-btn" id="exampleBtn" data-i18n="loadExample">載入示範</button>
+          <button class="control-btn" id="downloadBtn" data-i18n="download">下載檔案</button>
+          <button class="control-btn" id="exampleBtn" data-i18n="loadExample">看範例</button>
         </div>
+        <div class="field-note" style="padding:8px 21px 0" data-i18n="goalNote">「/goal」是 Claude Code 的指令：貼上這一行，它會一直做，直到條件全部達成。</div>
         <div class="preview" id="preview"></div>
-        <div class="output-foot"><span class="save-state" data-i18n="savedLocally">草稿自動儲存在此裝置</span><span data-i18n="localOnly">不會上傳至伺服器</span></div>
+        <div class="output-foot"><span class="save-state" data-i18n="savedLocally">自動存在這台裝置</span><span data-i18n="localOnly">不會上傳到網路</span></div>
       </aside>
     </div>
 
-    <div class="footnote"><span data-i18n="footLeft">重點不是 Prompt 寫得多好，而是規則、檢查與交付條件定得多清楚。</span><span>© PROMPT STUDIO</span></div>
+    <div class="footnote"><span data-i18n="footLeft">重點不是把話說得多漂亮，而是把規矩、檢查和交付講清楚。</span><span>© PROMPT STUDIO</span></div>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -399,34 +400,34 @@
       const legacyKey = 'prompt-studio-v1';
       const translations = {
         zh: {
-          brandSub:'Loop 規格設計', reset:'清空內容', eyebrow:'LOOP ENGINEERING / 03', headline:'人類設計迴圈，<br>AI 負責執行。',
-          subhead:'不再追求一段「最佳 Prompt」。在這裡設計一份迴圈規格：規則與上下文、每一步怎麼驗證、怎樣才能交付、哪些事要先問你。AI 照著規格反覆執行與驗證，直到全部通過。',
-          heroNote1:'你定規則與檢查', heroNote2:'AI 在規則內自己跑完',
-          pastTitle:'過去：對話式開發', past1:'找最佳 Prompt', past2:'單次對話', past3:'人工檢查與整合', past4:'AI 主導流程',
-          nowTitle:'現在：Loop Engineering', now1:'定義規則與上下文', now2:'多步驗證迴圈', now3:'自動化測試與交付', now4:'人類設計，AI 執行',
-          presetLabel:'快速開始', presetBugfix:'修 Bug', presetFeature:'新功能', presetRefactor:'重構', presetUi:'網站／介面改版', presetResearch:'研究整理', presetBlank:'從空白開始',
-          formTitle:'迴圈規格', formKicker:'LOOP SPEC', optional:'選填',
-          p1:'定義規則與上下文', p1hint:'先把目標、規則、資料和範圍定清楚，AI 才不用猜。', goalLabel:'目標', goalPh:'例如：修好手機版登入頁「送出」按鈕被鍵盤遮住的問題。',
-          rulesLabel:'規則', ruleAssume:'先講清楚假設：不確定先問，不要自己猜', ruleSimple:'不要過度工程化：能簡單解決就不要加戲(除非必要結構)', ruleScope:'不碰無關範圍：修Bug就修Bug，不要順手重構全世界', ruleVerify:'做完必須驗證：跑測試、看結果確認真的可以用',
-          projectRulesLabel:'專案規則／不可改動（每行一條）', projectRulesPh:'例如：\n公開 API 與資料庫結構不可改\n既有測試不可刪除或放寬\n不新增套件',
-          contextLabel:'上下文', contextPh:'相關檔案、專案地圖、背景、錯誤訊息、連結。只放 AI 需要的。', scopeLabel:'可以修改的範圍', scopePh:'例如：src/pages/login/ 與它的測試',
-          p2:'多步驗證迴圈', p2hint:'把工作拆成步驟，每一步都有自己的檢查；通過才進下一步。', stepsLabel:'步驟與檢查', stepsHint:'每行一步，用「|」隔開步驟和它的檢查。',
-          stepsPh:'例如：\n寫一個重現 Bug 的測試 | 測試先失敗\n修正版面 | 測試通過\n全站回歸 | npm test 全部通過',
-          maxTurnsLabel:'最多回合數', notesLabel:'進度筆記檔（留空不使用）', failNote:'失敗處理固定為：同一項檢查連續失敗 2 次就換方法；仍然失敗就停下來回報原因和證據。',
-          p3:'自動化測試與交付', p3hint:'用程式判斷是否完成，由獨立檢查者確認後才交付。', verifyLabel:'驗證指令（結束碼 0 才算通過）', verifyPh:'例如：npm test && npm run build && npm run lint',
-          doneWhenLabel:'其他完成條件（每行一條）', doneWhenPh:'例如：\n390px 寬的畫面上按鈕完整可見\n主控台沒有錯誤',
-          checkerLabel:'獨立檢查者', checkerSubagent:'另開子代理驗收（只讀不改）', checkerFresh:'新對話重新驗收', checkerHuman:'由我親自驗收',
-          deliveryLabel:'交付物', deliveryCommit:'本機 commit（不推送）', deliveryPr:'推到新分支並開 PR', deliveryFiles:'修改後的檔案', deliveryReport:'只交報告，不改檔',
-          p4:'人類設計，AI 執行', p4hint:'規格內 AI 自己決定怎麼做；以下事情必須先問你。', approvalLabel:'需要我批准',
-          askDeploy:'部署／上線、推送到 main', askDelete:'刪除檔案、資料或分支', askSpend:'花錢、購買、付費 API', askSend:'對外發送（Email、訊息、貼文）', askInstall:'安裝新套件或工具',
-          otherApprovalsLabel:'其他需要我批准的事', otherApprovalsPh:'例如：改動資料庫結構',
-          outputTitle:'規格預覽', completeness:'完整度', modeFull:'迴圈規格', modeGoal:'/goal 指令', copy:'複製', download:'下載 .md', loadExample:'載入示範',
-          emptyFull:'你的迴圈規格會出現在這裡。<br>先寫下目標。', emptyGoal:'/goal 需要「目標」和至少一條完成條件或驗證指令。',
-          savedLocally:'草稿自動儲存在此裝置', localOnly:'不會上傳至伺服器', footLeft:'重點不是 Prompt 寫得多好，而是規則、檢查與交付條件定得多清楚。',
-          progress:'已完成 {n} / 4 根支柱', chars:'{n} 字元', copied:'已複製', copyFail:'無法自動複製，請手動選取文字', downloaded:'檔案已準備下載',
-          resetDone:'已清空所有欄位', exampleLoaded:'已載入示範', needGoal:'先填寫「目標」。', needDone:'/goal 還需要完成條件或驗證指令。',
-          legacyImported:'已把舊版草稿匯入新欄位', confirmReplace:'載入後會取代目前已填寫的內容，確定嗎？', confirmClear:'確定要清空所有內容嗎？',
-          pageTitle:'Prompt Studio — Loop 規格設計', metaDesc:'用 Loop Engineering 設計 AI 工作規格：規則與上下文、多步驗證迴圈、自動化測試與交付、人類設計 AI 執行。'
+          brandSub:'AI 任務單', reset:'全部清空', eyebrow:'LOOP ENGINEERING / 03', headline:'你訂規則，<br>AI 照著做到完。',
+          subhead:'不用再煩惱「怎麼問 AI 最好」。把這張任務單填好：要做什麼、哪些不能碰、怎樣才算做完、哪些事要先問你。AI 會一步一步做、一步一步檢查，全部過關才交給你。',
+          heroNote1:'你負責訂規則', heroNote2:'AI 負責做和檢查',
+          pastTitle:'以前：跟 AI 一問一答', past1:'找最佳 Prompt', past2:'單次對話', past3:'人工檢查與整合', past4:'AI 主導流程',
+          nowTitle:'現在：Loop Engineering（先訂規則，AI 自己做到完）', now1:'定義規則與上下文', now2:'多步驗證迴圈', now3:'自動化測試與交付', now4:'人類設計，AI 執行',
+          presetLabel:'選一個範本開始', presetBugfix:'修問題（Bug）', presetFeature:'新功能', presetRefactor:'整理程式（重構）', presetUi:'改網站外觀', presetResearch:'查資料', presetBlank:'全部自己填',
+          formTitle:'任務單', formKicker:'LOOP SPEC', optional:'選填',
+          p1:'定義規則與上下文', p1hint:'先說清楚：要做什麼、有什麼規矩、AI 需要知道什麼。說清楚了，AI 就不用亂猜。', goalLabel:'要完成什麼？', goalPh:'用一句話說，例如：手機上的「送出」按鈕被鍵盤擋住了，把它修好。',
+          rulesLabel:'規矩', ruleAssume:'先講清楚假設：不確定先問，不要自己猜', ruleSimple:'不要過度工程化：能簡單解決就不要加戲(除非必要結構)', ruleScope:'不碰無關範圍：修Bug就修Bug，不要順手重構全世界', ruleVerify:'做完必須驗證：跑測試、看結果確認真的可以用',
+          projectRulesLabel:'絕對不能動的東西（一行寫一條）', projectRulesPh:'例如：\n登入方式不能改\n原本的測試不能刪\n不要安裝新東西',
+          contextLabel:'AI 需要知道的背景', contextPh:'例如：只有 iPhone 會出問題；相關檔案是 LoginForm.tsx；錯誤畫面長什麼樣子。', scopeLabel:'AI 可以改哪裡？', scopePh:'例如：只改登入頁的檔案',
+          p2:'多步驗證迴圈', p2hint:'把工作分成幾小步。每做完一步就檢查，過關了才做下一步。', stepsLabel:'分幾步做？每一步怎樣算過關？', stepsHint:'一行寫一步。「|」左邊寫要做什麼，右邊寫怎樣算過關。',
+          stepsPh:'例如：\n先把問題重現出來 | 看得到按鈕被擋住\n修好版面 | 按鈕不再被擋住\n全部再測一次 | 所有測試都通過',
+          maxTurnsLabel:'最多試幾輪？（避免一直做下去）', notesLabel:'進度記錄檔（像工作日誌，留空就不用）', failNote:'卡住時怎麼辦：同一個檢查失敗 2 次，就換個方法；還是不行，就停下來告訴你原因。',
+          p3:'自動化測試與交付', p3hint:'讓電腦自動檢查有沒有做好，再請另一位檢查者複查一次。全部過關，才交給你。', verifyLabel:'自動檢查的指令（跑完沒出錯才算過關）', verifyPh:'例如：npm test（不知道可以留空，AI 會先提出來問你）',
+          doneWhenLabel:'怎樣才算做完？（一行寫一條）', doneWhenPh:'例如：\n手機畫面上按鈕完整看得到\n打開網頁沒有錯誤訊息',
+          checkerLabel:'誰來複查？', checkerSubagent:'另一個 AI 複查（只看不改）', checkerFresh:'開新對話重新檢查一次', checkerHuman:'我自己檢查',
+          deliveryLabel:'做完要交出什麼？', deliveryCommit:'先存在電腦裡，不上傳', deliveryPr:'上傳成待審版本（PR），等我同意', deliveryFiles:'改好的檔案', deliveryReport:'只寫報告，不改檔案',
+          p4:'人類設計，AI 執行', p4hint:'任務單裡的事，AI 自己決定怎麼做；下面勾選的事，一定要先問你。', approvalLabel:'這些事要先問我',
+          askDeploy:'讓網站上線、正式發布（部署、推送到 main）', askDelete:'刪除檔案、資料或分支', askSpend:'花錢、購買、付費服務', askSend:'寄信、發訊息、發文', askInstall:'安裝新軟體或套件',
+          otherApprovalsLabel:'還有什麼要先問我？', otherApprovalsPh:'例如：改動資料庫',
+          outputTitle:'任務單預覽', completeness:'填寫進度', modeFull:'完整任務單', modeGoal:'/goal 一行版', copy:'複製', download:'下載檔案', loadExample:'看範例',
+          emptyFull:'填好「要完成什麼？」，<br>任務單就會出現在這裡。', emptyGoal:'一行版需要「要完成什麼？」，再加上「怎樣才算做完」或自動檢查指令。',
+          savedLocally:'自動存在這台裝置', localOnly:'不會上傳到網路', footLeft:'重點不是把話說得多漂亮，而是把規矩、檢查和交付講清楚。',
+          progress:'4 個部分已填 {n} 個', chars:'{n} 字元', copied:'已複製', copyFail:'沒辦法自動複製，請手動選取文字', downloaded:'檔案下載好了',
+          resetDone:'已全部清空', exampleLoaded:'已放入範例', needGoal:'請先填「要完成什麼？」', needDone:'一行版還需要「怎樣才算做完」或自動檢查指令。',
+          legacyImported:'已把舊版填的內容搬過來', confirmReplace:'這會蓋掉你已經填的內容，確定嗎？', confirmClear:'確定要全部清空嗎？',
+          goalNote:'「/goal」是 Claude Code 的指令：貼上這一行，它會一直做，直到條件全部達成。', pageTitle:'Prompt Studio — AI 任務單', metaDesc:'填一張任務單，讓 AI 照規則做、自己檢查，全部過關才交給你。'
         },
         en: {
           brandSub:'Loop Spec Designer', reset:'Clear', eyebrow:'LOOP ENGINEERING / 03', headline:'Humans design the loop.<br>AI executes it.',
@@ -456,7 +457,7 @@
           progress:'{n} / 4 pillars filled', chars:'{n} chars', copied:'Copied', copyFail:'Could not copy automatically; please select the text', downloaded:'Download ready',
           resetDone:'All fields cleared', exampleLoaded:'Example loaded', needGoal:'Fill in the goal first.', needDone:'/goal also needs a done condition or verify command.',
           legacyImported:'Old draft imported into the new fields', confirmReplace:'This will replace what you have entered. Continue?', confirmClear:'Clear all content?',
-          pageTitle:'Prompt Studio — Loop Spec Designer', metaDesc:'Design AI work specs with Loop Engineering: rules and context, multi-step verification loop, automated testing and delivery, humans design and AI executes.'
+          goalNote:'“/goal” is a Claude Code command: paste this one line and it keeps working until every condition is met.', pageTitle:'Prompt Studio — Loop Spec Designer', metaDesc:'Design AI work specs with Loop Engineering: rules and context, multi-step verification loop, automated testing and delivery, humans design and AI executes.'
         }
       };
       const presetData = {
